@@ -1,7 +1,13 @@
-import { BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import { IPC } from '@shared/ipc-contract'
+import { wrapHandler } from './wrapHandler'
 
 export function registerIpcHandlers(): void {
+  ipcMain.handle(
+    IPC.app.version,
+    wrapHandler(() => Promise.resolve(app.getVersion()))
+  )
+
   ipcMain.on(IPC.window.minimize, (event) => {
     BrowserWindow.fromWebContents(event.sender)?.minimize()
   })

@@ -8,6 +8,9 @@ import type { AppSettings } from '@shared/settings-types'
 import type { UpdateStatus } from '@shared/update-types'
 
 const api = {
+  app: {
+    version: (): Promise<IpcResult<string>> => ipcRenderer.invoke(IPC.app.version)
+  },
   window: {
     minimize: (): void => ipcRenderer.send(IPC.window.minimize),
     maximizeToggle: (): void => ipcRenderer.send(IPC.window.maximizeToggle),

@@ -4,6 +4,13 @@
   gap: var(--spacing-4);
 }
 
+.about {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 .radioRow {
   display: flex;
   gap: var(--spacing-3);

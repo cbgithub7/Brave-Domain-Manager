@@ -3,6 +3,9 @@
 // in later phases as their services are built.
 
 export const IPC = {
+  app: {
+    version: 'app:version'
+  },
   window: {
     minimize: 'window:minimize',
     maximizeToggle: 'window:maximizeToggle',

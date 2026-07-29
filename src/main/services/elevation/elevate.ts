@@ -43,6 +43,32 @@ function psQuote(value: string): string {
 }
 
 /**
+ * Pulled out as a pure function so this exact bug can be regression-tested
+ * without spawning a real elevated process: -ArgumentList as an ARRAY is
+ * unreliable when combined with -Verb (which forces the ShellExecuteEx/UAC
+ * code path instead of plain CreateProcess) - PowerShell does not reliably
+ * quote array elements that themselves contain a space, so a spaced install
+ * path (e.g. "Brave Domain Manager") can silently get split into multiple
+ * separate argv entries, corrupting the command line. Node then crashes on
+ * the garbled argv before our own code ever runs, so no result file gets
+ * written and no diagnostic reaches us. The fix is to pass -ArgumentList a
+ * single pre-quoted string instead of an array.
+ */
+export function buildElevationPsScript(
+  helperExePath: string,
+  helperScriptPath: string,
+  payloadPath: string,
+  resultPath: string
+): string {
+  const helperArgsString = [helperScriptPath, payloadPath, resultPath].map((value) => `"${value}"`).join(' ')
+  return (
+    `$p = Start-Process -FilePath ${psQuote(helperExePath)} ` +
+    `-ArgumentList ${psQuote(helperArgsString)} -Verb RunAs -Wait -PassThru -WindowStyle Hidden; ` +
+    `exit $p.ExitCode`
+  )
+}
+
+/**
  * Runs a batch of registry writes elevated. Launched via PowerShell's
  * Start-Process -Verb RunAs, which goes through ShellExecute/the AppInfo
  * service - the actual path that shows the UAC consent prompt. A plain
@@ -66,11 +92,7 @@ export async function runElevatedRegistryBatch(
   try {
     await writeFile(payloadPath, JSON.stringify({ path: registryPath, entries }), 'utf-8')
 
-    const argumentList = [getHelperScriptPath(), payloadPath, resultPath].map(psQuote).join(', ')
-    const psScript =
-      `$p = Start-Process -FilePath ${psQuote(getHelperExePath())} ` +
-      `-ArgumentList @(${argumentList}) -Verb RunAs -Wait -PassThru -WindowStyle Hidden; ` +
-      `exit $p.ExitCode`
+    const psScript = buildElevationPsScript(getHelperExePath(), getHelperScriptPath(), payloadPath, resultPath)
 
     let exitCode = 0
     let stderr = ''

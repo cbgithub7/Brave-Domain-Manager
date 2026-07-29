@@ -20,6 +20,14 @@ interface SettingsTabProps {
 }
 
 export function SettingsTab({ settings, onChange }: SettingsTabProps): JSX.Element {
+  const [version, setVersion] = useState<string | null>(null)
+
+  useEffect(() => {
+    window.api.app.version().then((result) => {
+      if (result.ok) setVersion(result.data)
+    })
+  }, [])
+
   return (
     <div className={styles.stack}>
       <Card>
@@ -89,6 +97,15 @@ export function SettingsTab({ settings, onChange }: SettingsTabProps): JSX.Eleme
               </label>
             ))}
           </div>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHead>
+          <h3>About</h3>
+        </CardHead>
+        <CardBody>
+          <p className={styles.about}>Brave Domain Manager{version ? ` — v${version}` : ''}</p>
         </CardBody>
       </Card>
     </div>
