@@ -173,6 +173,8 @@ export class DomainService {
       throw new AppErrorException('NOT_FOUND', 'Nothing to undo.')
     }
 
+    await this.assertNoExternalConflict(action.invert, `undo "${action.label}"`)
+
     const results = await runElevatedRegistryBatch(BRAVE_URL_BLOCKLIST_PATH, action.invert)
     const failure = results.find((r) => !r.ok)
     if (failure) {
@@ -189,6 +191,8 @@ export class DomainService {
       throw new AppErrorException('NOT_FOUND', 'Nothing to redo.')
     }
 
+    await this.assertNoExternalConflict(action.apply, `redo "${action.label}"`)
+
     const results = await runElevatedRegistryBatch(BRAVE_URL_BLOCKLIST_PATH, action.apply)
     const failure = results.find((r) => !r.ok)
     if (failure) {
@@ -197,5 +201,40 @@ export class DomainService {
 
     this.history.commitRedo()
     return { label: action.label, history: this.history.status() }
+  }
+
+  /**
+   * Cheap safety net against changes made outside this app's own tracking
+   * (another running instance, or someone hand-editing the registry)
+   * between when a history action was recorded and when it's replayed: one
+   * extra unelevated read (reads are in-process and don't need admin - see
+   * registryClient.ts), then check each mutation's precondition still holds
+   * before spending a UAC prompt on a write that could otherwise silently
+   * clobber data this app's history never touched.
+   */
+  private async assertNoExternalConflict(mutations: DomainMutation[], actionLabel: string): Promise<void> {
+    const existing = await this.registry.listStringValues(BRAVE_URL_BLOCKLIST_PATH)
+    const currentByName = new Map(existing.map((entry) => [entry.name, entry.value]))
+
+    for (const mutation of mutations) {
+      const current = currentByName.get(mutation.name)
+
+      if (mutation.op === 'delete') {
+        if (current === undefined) {
+          throw new AppErrorException(
+            'HISTORY_CONFLICT',
+            `Can't ${actionLabel}: entry ${mutation.name} no longer exists. It may have changed outside this app.`
+          )
+        }
+      } else if (current !== undefined && current !== mutation.value) {
+        // op === 'set': fine if the slot is empty, or already holds exactly this
+        // value (idempotent). A different existing value means something else
+        // has since taken this slot.
+        throw new AppErrorException(
+          'HISTORY_CONFLICT',
+          `Can't ${actionLabel}: entry ${mutation.name} now holds "${current}", not what was expected. It may have changed outside this app.`
+        )
+      }
+    }
   }
 }

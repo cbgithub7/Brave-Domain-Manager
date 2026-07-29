@@ -31,6 +31,7 @@ export type ErrorCode =
   | 'ELEVATION_CANCELLED'
   | 'ELEVATION_FAILED'
   | 'FILE_PARSE_ERROR'
+  | 'HISTORY_CONFLICT'
   | 'NOT_FOUND'
   | 'UNKNOWN'
 
