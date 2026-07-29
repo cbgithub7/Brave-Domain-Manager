@@ -1,3 +1,5 @@
+import type { HistoryStatus } from './history-types'
+
 export interface DomainEntry {
   /** Registry value name under URLBlocklist (an app-chosen numeric string, not user-facing). */
   name: string
@@ -15,6 +17,7 @@ export interface SkippedDomain {
 export interface AddDomainsResult {
   added: DomainEntry[]
   skipped: SkippedDomain[]
+  history: HistoryStatus
 }
 
 export interface FailedRemoval {
@@ -25,6 +28,7 @@ export interface FailedRemoval {
 export interface RemoveDomainsResult {
   removed: string[]
   failed: FailedRemoval[]
+  history: HistoryStatus
 }
 
 export type StagedDomainStatus =

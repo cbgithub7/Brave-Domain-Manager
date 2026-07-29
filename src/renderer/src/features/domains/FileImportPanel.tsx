@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import type { StagedDomain } from '@shared/domain-types'
+import type { HistoryStatus } from '@shared/history-types'
 
 interface FileImportPanelProps {
-  onCommitted: () => void
+  onCommitted: (status: HistoryStatus) => void
 }
 
 export function FileImportPanel({ onCommitted }: FileImportPanelProps): JSX.Element {
@@ -51,7 +52,7 @@ export function FileImportPanel({ onCommitted }: FileImportPanelProps): JSX.Elem
       if (result.data.skipped.length > 0) {
         setError(result.data.skipped.map((s) => `${s.domain}: ${s.reason}`).join(' '))
       }
-      onCommitted()
+      onCommitted(result.data.history)
       setStaged(null)
       setFilePath(null)
     } else {

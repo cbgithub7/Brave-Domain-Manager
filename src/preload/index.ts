@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import type { AddDomainsResult, DomainEntry, RemoveDomainsResult, StagedDomain } from '@shared/domain-types'
+import type { HistoryStatus, UndoRedoResult } from '@shared/history-types'
 import { IPC, type IpcResult } from '@shared/ipc-contract'
 
 const api = {
@@ -25,6 +26,11 @@ const api = {
     pickFile: (): Promise<IpcResult<string | null>> => ipcRenderer.invoke(IPC.domains.pickFile),
     loadFileStaged: (filePath: string): Promise<IpcResult<StagedDomain[]>> =>
       ipcRenderer.invoke(IPC.domains.loadFileStaged, filePath)
+  },
+  history: {
+    status: (): Promise<IpcResult<HistoryStatus>> => ipcRenderer.invoke(IPC.history.status),
+    undo: (): Promise<IpcResult<UndoRedoResult>> => ipcRenderer.invoke(IPC.history.undo),
+    redo: (): Promise<IpcResult<UndoRedoResult>> => ipcRenderer.invoke(IPC.history.redo)
   }
 }
 

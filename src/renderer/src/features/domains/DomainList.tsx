@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { DomainEntry } from '@shared/domain-types'
+import type { HistoryStatus } from '@shared/history-types'
 
 interface DomainListProps {
   /** Bump this to force a refetch (e.g. after FileImportPanel commits an add). */
   refreshSignal?: number
+  /** Called with the fresh history status after a successful add/remove. */
+  onMutated?: (status: HistoryStatus) => void
 }
 
-export function DomainList({ refreshSignal }: DomainListProps): JSX.Element {
+export function DomainList({ refreshSignal, onMutated }: DomainListProps): JSX.Element {
   const [domains, setDomains] = useState<DomainEntry[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [newDomain, setNewDomain] = useState('')
@@ -41,6 +44,7 @@ export function DomainList({ refreshSignal }: DomainListProps): JSX.Element {
         setError(result.data.skipped.map((s) => `${s.domain}: ${s.reason}`).join(' '))
       }
       if (result.data.added.length > 0) setNewDomain('')
+      onMutated?.(result.data.history)
       await refresh()
     } else {
       setError(result.error.message)
@@ -59,6 +63,7 @@ export function DomainList({ refreshSignal }: DomainListProps): JSX.Element {
         setError(result.data.failed.map((f) => `${f.name}: ${f.reason}`).join(' '))
       }
       setSelected(new Set())
+      onMutated?.(result.data.history)
       await refresh()
     } else {
       setError(result.error.message)

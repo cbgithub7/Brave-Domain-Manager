@@ -16,6 +16,11 @@ export const IPC = {
     remove: 'domains:remove',
     pickFile: 'domains:pickFile',
     loadFileStaged: 'domains:loadFileStaged'
+  },
+  history: {
+    status: 'history:status',
+    undo: 'history:undo',
+    redo: 'history:redo'
   }
 } as const
 

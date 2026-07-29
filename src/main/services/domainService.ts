@@ -1,7 +1,11 @@
+import { randomUUID } from 'node:crypto'
 import type { AddDomainsResult, DomainEntry, RemoveDomainsResult } from '@shared/domain-types'
 import { validateDomain } from '@shared/domainValidation'
+import type { UndoRedoResult } from '@shared/history-types'
 import { AppErrorException } from '../ipc/wrapHandler'
 import { runElevatedRegistryBatch } from './elevation/elevate'
+import type { DomainMutation } from './historyService'
+import type { HistoryService } from './historyService'
 import type { RegistryClient } from './registryClient'
 
 export const BRAVE_URL_BLOCKLIST_PATH = 'HKLM\\SOFTWARE\\Policies\\BraveSoftware\\Brave\\URLBlocklist'
@@ -18,7 +22,10 @@ function createNameAllocator(existingNames: string[]): () => string {
 }
 
 export class DomainService {
-  constructor(private readonly registry: RegistryClient) {}
+  constructor(
+    private readonly registry: RegistryClient,
+    private readonly history: HistoryService
+  ) {}
 
   async listBlockedDomains(): Promise<DomainEntry[]> {
     const entries = await this.registry.listStringValues(BRAVE_URL_BLOCKLIST_PATH)
@@ -57,7 +64,7 @@ export class DomainService {
     }
 
     if (toWrite.length === 0) {
-      return { added: [], skipped }
+      return { added: [], skipped, history: this.history.status() }
     }
 
     const results = await runElevatedRegistryBatch(
@@ -66,16 +73,30 @@ export class DomainService {
     )
 
     const added: DomainEntry[] = []
+    const apply: DomainMutation[] = []
+    const invert: DomainMutation[] = []
     for (const entry of toWrite) {
       const result = results.find((r) => r.name === entry.name)
       if (result?.ok) {
         added.push(entry)
+        apply.push({ op: 'set', name: entry.name, value: entry.domain })
+        invert.push({ op: 'delete', name: entry.name })
       } else {
         skipped.push({ domain: entry.domain, reason: result?.error ?? 'Registry write failed.' })
       }
     }
 
-    return { added, skipped }
+    if (added.length > 0) {
+      this.history.push({
+        id: randomUUID(),
+        timestamp: Date.now(),
+        label: added.length === 1 ? `Add ${added[0].domain}` : `Add ${added.length} domains`,
+        apply,
+        invert
+      })
+    }
+
+    return { added, skipped, history: this.history.status() }
   }
 
   /** Single add is just addDomains with a 1-item array - same pipeline, no separate code path. */
@@ -89,7 +110,14 @@ export class DomainService {
   }
 
   async removeDomains(names: string[]): Promise<RemoveDomainsResult> {
-    if (names.length === 0) return { removed: [], failed: [] }
+    if (names.length === 0) {
+      return { removed: [], failed: [], history: this.history.status() }
+    }
+
+    // Snapshot current values BEFORE deleting, so undo can restore them under
+    // their original names rather than freshly-generated ones.
+    const existing = await this.registry.listStringValues(BRAVE_URL_BLOCKLIST_PATH)
+    const existingByName = new Map(existing.map((entry) => [entry.name, entry.value]))
 
     const results = await runElevatedRegistryBatch(
       BRAVE_URL_BLOCKLIST_PATH,
@@ -98,16 +126,34 @@ export class DomainService {
 
     const removed: string[] = []
     const failed: RemoveDomainsResult['failed'] = []
+    const apply: DomainMutation[] = []
+    const invert: DomainMutation[] = []
+
     for (const name of names) {
       const result = results.find((r) => r.name === name)
       if (result?.ok) {
         removed.push(name)
+        apply.push({ op: 'delete', name })
+        const originalValue = existingByName.get(name)
+        if (originalValue !== undefined) {
+          invert.push({ op: 'set', name, value: originalValue })
+        }
       } else {
         failed.push({ name, reason: result?.error ?? 'Registry write failed.' })
       }
     }
 
-    return { removed, failed }
+    if (removed.length > 0) {
+      this.history.push({
+        id: randomUUID(),
+        timestamp: Date.now(),
+        label: removed.length === 1 ? 'Remove domain' : `Remove ${removed.length} domains`,
+        apply,
+        invert
+      })
+    }
+
+    return { removed, failed, history: this.history.status() }
   }
 
   /** Single remove is just removeDomains with a 1-item array. */
@@ -119,5 +165,37 @@ export class DomainService {
         result.failed[0]?.reason ?? `Failed to remove domain at ${name}.`
       )
     }
+  }
+
+  async undo(): Promise<UndoRedoResult> {
+    const action = this.history.peekUndo()
+    if (!action) {
+      throw new AppErrorException('NOT_FOUND', 'Nothing to undo.')
+    }
+
+    const results = await runElevatedRegistryBatch(BRAVE_URL_BLOCKLIST_PATH, action.invert)
+    const failure = results.find((r) => !r.ok)
+    if (failure) {
+      throw new AppErrorException('REGISTRY_WRITE_ERROR', `Failed to undo "${action.label}": ${failure.error}`)
+    }
+
+    this.history.commitUndo()
+    return { label: action.label, history: this.history.status() }
+  }
+
+  async redo(): Promise<UndoRedoResult> {
+    const action = this.history.peekRedo()
+    if (!action) {
+      throw new AppErrorException('NOT_FOUND', 'Nothing to redo.')
+    }
+
+    const results = await runElevatedRegistryBatch(BRAVE_URL_BLOCKLIST_PATH, action.apply)
+    const failure = results.find((r) => !r.ok)
+    if (failure) {
+      throw new AppErrorException('REGISTRY_WRITE_ERROR', `Failed to redo "${action.label}": ${failure.error}`)
+    }
+
+    this.history.commitRedo()
+    return { label: action.label, history: this.history.status() }
   }
 }
