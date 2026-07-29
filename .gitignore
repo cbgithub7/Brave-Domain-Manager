@@ -404,3 +404,19 @@ known_bugs.txt
 venv_install_steps.txt
 config.ini
 notes/
+
+# Python virtual environment (legacy app)
+venv/
+legacy/__pycache__/
+legacy/**/__pycache__/
+*.pyc
+
+# Node / Electron (rewrite)
+node_modules/
+dist/
+dist-electron/
+out/
+release/
+*.local
+.env
+.env.*
