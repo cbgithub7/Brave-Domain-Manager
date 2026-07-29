@@ -1,228 +1,192 @@
-# Brave Browser Domain Manager Application Placeholder Documentation
+# Brave Domain Manager Documentation
 
 - [1. Introduction](#1-introduction)
 - [2. Installation](#2-installation)
 - [3. Getting Started](#3-getting-started)
 - [4. Managing Domain Entries](#4-managing-domain-entries)
-- [5. Checking Registry Path and Brave Installation](#5-checking-registry-path-and-brave-installation)
-- [7. Troubleshooting](#7-troubleshooting)
+- [5. Undo & Redo](#5-undo--redo)
+- [6. Backup & Restore](#6-backup--restore)
+- [7. Settings](#7-settings)
+- [8. Troubleshooting](#8-troubleshooting)
 - [9. License](#9-license)
 - [10. Additional Resources](#10-additional-resources)
-- [11. Conclusion](#11-conclusion)
 
 ## 1. Introduction
 
-The **Domain Manager** is a tool designed to facilitate the management of domain entries in the Windows registry. It provides a set of functionalities to add, remove, and fetch domain entries, as well as check the status of the registry path and Brave browser installation.
+**Brave Domain Manager** is a Windows desktop app for managing Brave browser's
+domain blocklist policy directly in the Windows registry, without hand-editing
+`regedit`. It's built with Electron, React, and TypeScript.
 
 ### Purpose
 
-The primary purpose of the Domain Manager is to simplify the process of managing domain entries in the Windows registry. This is particularly useful for administrators or users who need to maintain a list of blocked or allowed domains for various purposes, such as security or content filtering.
+Brave supports blocking specific domains via a machine-wide policy stored in
+the registry (`HKLM\SOFTWARE\Policies\BraveSoftware\Brave\URLBlocklist`), but
+Brave itself doesn't provide a UI for managing that list. This app fills that
+gap: add, remove, search, undo/redo, and back up/restore blocked domains
+through a normal desktop interface.
 
-### Importance of Managing Domain Entries
+### Why manage domains this way
 
-Managing domain entries in the Windows registry is necessary for several reasons:
-
-- **Security**: Blocking or allowing specific domains can enhance security by preventing access to malicious websites or restricting access to approved ones.
-- **Content Filtering**: Organizations may need to filter internet access based on domain names to enforce acceptable use policies or comply with regulatory requirements.
-- **Application Control**: Some applications use the Windows registry to store domain-based configurations or restrictions, and managing these entries is essential for proper application functionality.
-
-Overall, the Domain Manager simplifies the task of managing domain entries in the Windows registry, providing users with a convenient and efficient way to maintain control over internet access and application behavior.
+- **Content filtering** — block specific sites at the browser-policy level,
+  independent of any single profile or extension.
+- **Bulk management** — import or export whole lists of domains at once
+  instead of one at a time.
+- **Safety net** — every change is undoable, and you can export a snapshot of
+  your blocklist to restore later if something goes wrong.
 
 ## 2. Installation
 
-### Download or Clone the Repository
+### Download
 
-To get started with the Domain Manager, you can either download the repository as a ZIP file or clone it using Git. Here's how:
+Get the latest installer from the
+[Releases page](https://github.com/cbgithub7/Brave-Domain-Manager/releases/latest):
+`brave-domain-manager-<version>-setup.exe` (Windows, 64-bit).
 
-#### Download ZIP
+### Install
 
-1. Navigate to the [GitHub repository](https://github.com/example/domain-manager).
-2. Click on the "Code" button.
-3. Select "Download ZIP".
-4. Extract the downloaded ZIP file to your desired location.
-
-#### Clone with Git
-
-If you have Git installed, you can clone the repository using the following command in your Windows terminal or command prompt:
-
-git clone <https://github.com/example/domain-manager.git>
+1. Run the downloaded `.exe`.
+2. Windows SmartScreen may warn that the app is unrecognized, since the build
+   isn't code-signed (no publisher certificate). Choose **More info → Run
+   anyway** to proceed.
+3. Follow the installer prompts — you can choose the install directory, and a
+   shortcut is added to the Start Menu.
 
 ### Prerequisites
 
-Before running the Domain Manager application, ensure that you have the following prerequisites installed on your system:
+- Windows 10 or 11 (64-bit)
+- [Brave browser](https://brave.com/) installed (the app manages Brave's
+  policy settings; Brave doesn't need to be running)
 
-- **PowerShell**: The application relies on PowerShell scripts for managing domain entries in the Windows registry. Make sure PowerShell is installed on your system and accessible from the command line.
+### Building from source
 
-- **Python**: The Domain Manager includes Python scripts for executing various tasks. Install Python from the [official Python website](https://www.python.org/downloads/) if you haven't already. Ensure that Python is added to your system's PATH to run Python scripts from any directory.
-
-Once you have downloaded or cloned the repository and ensured that the prerequisites are met, you are ready to use the Domain Manager application.
+Developers can build the app directly instead of using a pre-built installer.
+See the [main repository README](https://github.com/cbgithub7/Brave-Domain-Manager#building-from-source)
+for build instructions.
 
 ## 3. Getting Started
 
-### Running the Application
+Launch **Brave Domain Manager** from the Start Menu. The app opens directly to
+the **Domain Management** tab, showing your currently blocked domains.
 
-To run the Domain Manager application, follow these steps:
-
-1. Open a Windows terminal or command prompt window.
-2. Navigate to the directory where you downloaded or cloned the Domain Manager repository.
-3. Execute the main Python script by running the following command:
-
-```bash
-python domain_manager_gui.py
-```
+You do not need to run the app as Administrator. It starts normally as a
+regular user; Windows will only prompt for elevation (UAC) at the moment you
+actually add or remove a domain, since writing to the registry is the only
+operation that needs admin rights. Just reading the current list, searching,
+or browsing Settings never requires elevation.
 
 ## 4. Managing Domain Entries
 
-### Fetching Existing Domains
+### Adding a single domain
 
-To fetch existing domain entries from the Windows registry, follow these steps:
+1. Type a domain into the input field at the top of the Domain Management tab
+   (format: `[subdomain.]domain.tld`, e.g. `example.com` or `sub.example.com`).
+2. Click **Add domain** (or press Enter).
+3. Approve the UAC prompt. The domain is written to the registry and appears
+   in the list.
 
-1. Open the Domain Manager application.
-2. Select the option to "View Existing Domains" from the main menu.
-3. The application will retrieve and display the list of existing domain entries stored in the registry.
+### Adding domains from a file
 
-### Adding Domain Entries
+1. Under "Add from file," click **Browse…**.
+2. Choose a `.txt` (one domain per line), `.csv` (one domain per row, first
+   column used), or `.json` file (a JSON array of domain strings).
+3. Each entry is validated and shown in a staged list before anything is
+   written — invalid entries and domains already on your blocklist are
+   flagged with a reason and automatically skipped.
+4. Click **Add N valid domain(s)** to commit the batch. This triggers exactly
+   one UAC prompt for the whole batch, not one per domain.
 
-To add a domain entry to the Windows registry, you have two options:
+### Removing domains
 
-#### Adding a Single Domain Entry
+- Click **Remove** on a single row, or
+- Check multiple boxes and click **Delete selected** to remove several at once.
 
-Follow these steps to add a single domain entry:
+### Searching
 
-1. Open the Domain Manager application.
-2. Select the option to "Add Domain" from the main menu.
-3. Enter the domain in the format [subdomain].[domain].[TLD] when prompted.
-4. The application will add the domain entry to the registry if it's not already present.
+The "Search blocked domains…" field does fuzzy matching, so minor typos or
+partial names still find the right entry without needing an exact match.
 
-#### Adding Multiple Domain Entries from a File
+## 5. Undo & Redo
 
-If you have a list of domain entries in a text file, you can add them to the registry in bulk:
+Every add or remove is undoable:
 
-1. Prepare a text file containing one domain entry per line.
-2. Open the Domain Manager application.
-3. Select the option to "Add Domains from File" from the main menu.
-4. Provide the path to the text file when prompted.
-5. The application will read the file and add each domain entry to the registry.
+- Use the **Undo**/**Redo** buttons in the toolbar, which show what action
+  they'd affect.
+- Or use the keyboard shortcuts **Ctrl+Z** / **Ctrl+Y** (**Ctrl+Shift+Z** also
+  works for redo). These are ignored while a text field has focus, so they
+  never interfere with normal text editing.
 
-### Removing Domain Entries
+Undo/redo history is per-session — it resets when you close the app. If the
+registry changes outside the app between an action and its undo (for
+example, another instance of the app, or a manual `regedit` edit touching the
+same entry), the app detects the conflict and refuses to overwrite it rather
+than silently clobbering the unrelated change.
 
-To remove a domain entry from the Windows registry, follow these steps:
+For anything you want to keep permanently, use Backup & Restore instead.
 
-1. Open the Domain Manager application.
-2. Select the option to "Remove Domain" from the main menu.
-3. Enter the index of the domain entry you wish to remove when prompted.
-4. The application will remove the specified domain entry from the registry.
+## 6. Backup & Restore
 
-#### Removing Multiple Domain Entries from a File
+Located under "Backup & restore" on the Domain Management tab — a deliberate,
+long-term snapshot mechanism, independent of Undo/Redo:
 
-If you have a list of domain entries to remove stored in a text file, you can remove them in bulk:
+- **Export to file…** saves your current blocklist to a JSON file you choose.
+- **Restore from file…** loads a previously exported (or hand-written) JSON
+  snapshot in one of two modes:
+  - **Merge** — adds the snapshot's domains to your current list; anything
+    already blocked is skipped.
+  - **Replace** — clears your current list first, then restores exactly what's
+    in the snapshot.
 
-1. Prepare a text file containing one domain entry per line.
-2. Open the Domain Manager application.
-3. Select the option to "Remove Domains from File" from the main menu.
-4. Provide the path to the text file when prompted.
-5. The application will read the file and remove each domain entry from the registry.
+## 7. Settings
 
-By following these steps, you can efficiently manage domain entries in the Windows registry using the Domain Manager application.
+- **Theme** — Light, Dark, or Follow system. Applies immediately.
+- **Font scale** — 70%–140%, applied immediately across the whole app.
+- **Logging** — disabled by default. When enabled, you choose which
+  categories to record (registry access, user activity, configuration
+  changes, audit, security, performance, startup/shutdown, success/error).
+  Logs are written to your user data folder and rotate daily. A small
+  indicator next to the tabs always shows whether logging is currently on.
 
-## 5. Checking Registry Path and Brave Installation
+## 8. Troubleshooting
 
-### Checking Registry Path
+#### "Windows protected your PC" (SmartScreen)
 
-Before managing domain entries in the Windows registry, it's essential to ensure that the required path exists. Follow these steps to check if the registry path exists:
+This is expected for an unsigned build — there's no publisher certificate.
+Choose **More info → Run anyway**. If you'd rather verify the source first,
+see [Building from source](#building-from-source) above.
 
-1. Open the Domain Manager application.
-2. Select the option to "Check Registry Path" from the main menu.
-3. The application will verify the existence of the registry path.
-4. If the path is found, a confirmation message will be displayed along with the path details.
-5. If the path is not found, the application will provide guidance on how to proceed.
+#### A UAC prompt appears when I add or remove a domain
 
-### Checking Brave Installation
+This is expected and by design — writing to the registry requires
+administrator rights, so the app requests elevation only for that specific
+action, not for the whole app. Declining the prompt cancels just that one
+add/remove; nothing else in the app is affected.
 
-To utilize certain features of the Domain Manager application, such as domain blocking in Brave browser, it's necessary to verify whether Brave browser is installed on your system. Here's how to check if Brave browser is installed:
+#### My domain was rejected as invalid
 
-1. Open the Domain Manager application.
-2. Select the option to "Check Brave Installation" from the main menu.
-3. The application will perform a check to determine if Brave browser is installed.
-4. If Brave browser is installed, a confirmation message will be displayed.
-5. If Brave browser is not installed, the application will notify you accordingly.
+Domains must match `[subdomain.]domain.tld` — for example `example.com` or
+`mail.example.co.uk`. Leading `http://`, `https://`, and `www.` are stripped
+automatically, and anything after a `/` (a path) is ignored, so pasting a full
+URL still works as long as the underlying domain is valid.
 
-By following these instructions, you can verify the availability of the registry path and check the installation status of Brave browser, ensuring smooth operation of the Domain Manager application.
+#### Undo/redo says it can't complete an action
 
-## 7. Troubleshooting
+This means the registry changed outside the app since that action was
+recorded (see [Undo & Redo](#5-undo--redo)) — the app is refusing to overwrite
+data it didn't create, rather than failing silently. Check the current state
+of the entry in question and adjust manually if needed.
 
-### Common Issues and Solutions
+#### The Documentation tab won't load
 
-#### Issue: Unable to Fetch Existing Domains
-
-- **Possible Causes:**
-  - Incorrect registry path.
-  - Insufficient permissions to access the registry.
-- **Solution:**
-  - Ensure that the correct registry path is specified in the application settings.
-  - Run the application with administrative privileges to access the registry.
-
-#### Issue: Unable to Add Domain Entries
-
-- **Possible Causes:**
-  - Invalid domain format.
-  - Lack of administrative privileges.
-- **Solution:**
-  - Verify that the domain follows the [subdomain].[domain].[TLD] format.
-  - Run the application as an administrator to modify the registry.
-
-#### Issue: Error in Removing Domain Entries
-
-- **Possible Causes:**
-  - Index out of range.
-  - Domain entry does not exist.
-- **Solution:**
-  - Check the index provided for removing the domain entry.
-  - Ensure that the domain entry exists in the registry.
-
-### Error Messages and Possible Causes
-
-#### Error: "Failed to fetch existing domain strings from the registry"
-
-- **Possible Causes:**
-  - Incorrect registry path.
-  - Registry path does not exist.
-- **Solution:**
-  - Verify the registry path specified in the application settings.
-  - Check if the registry path exists on the system.
-
-#### Error: "Failed to add domain to the registry"
-
-- **Possible Causes:**
-  - Invalid domain format.
-  - Lack of administrative privileges.
-- **Solution:**
-  - Ensure that the domain follows the correct format ([subdomain].[domain].[TLD]).
-  - Run the application with administrative privileges.
-
-#### Error: "Failed to remove domain from the registry"
-
-- **Possible Causes:**
-  - Index out of range.
-  - Domain entry does not exist.
-- **Solution:**
-  - Double-check the index provided for removing the domain entry.
-  - Verify that the domain entry exists in the registry.
-
-By addressing these common issues and understanding the possible causes of error messages, you can troubleshoot problems effectively while using the Domain Manager application.
+If you're offline, the embedded copy of this site can't load. The app shows a
+retry option and a link to open this page in your regular browser instead.
 
 ## 9. License
 
-The Domain Manager application is licensed under the [MIT License](https://opensource.org/licenses/MIT). Feel free to modify and distribute the application according to the terms of this license.
+Brave Domain Manager is licensed under the
+[MIT License](https://github.com/cbgithub7/Brave-Domain-Manager/blob/main/LICENSE).
 
 ## 10. Additional Resources
 
-- **GitHub Repository:** [Link](https://github.com/yourusername/domain-manager)
-- **Issue Tracker:** [Link](https://github.com/yourusername/domain-manager/issues)
-- **Contact Information:** For any inquiries or feedback, please reach out to [email@example.com](mailto:email@example.com).
-
-## 11. Conclusion
-
-Thank you for exploring the Domain Manager application! This project was undertaken primarily for learning purposes and personal use. It's not intended to be widely used or actively supported. Nonetheless, we hope the insights gained from this project have been valuable to you in your learning journey.
-
-If you have any questions about the project or would like to discuss any aspect of it, feel free to reach out. Remember, the best way to learn is often by doing, so keep experimenting and building! Happy coding!
+- **GitHub Repository:** https://github.com/cbgithub7/Brave-Domain-Manager
+- **Releases:** https://github.com/cbgithub7/Brave-Domain-Manager/releases
+- **Issue Tracker:** https://github.com/cbgithub7/Brave-Domain-Manager/issues
