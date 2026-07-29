@@ -1,0 +1,22 @@
+appId: com.cbgithub7.brave-domain-manager
+productName: Brave Domain Manager
+directories:
+  buildResources: build
+  output: release
+files:
+  - out/**/*
+  - '!**/.vscode/*'
+  - '!src/**'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+asarUnpack:
+  - resources/**
+win:
+  executionLevel: asInvoker
+  target:
+    - target: nsis
+      arch:
+        - x64
+nsis:
+  artifactName: ${name}-${version}-setup.${ext}
+  oneClick: false
+  allowToChangeInstallationDirectory: true

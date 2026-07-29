@@ -1,0 +1,64 @@
+/*
+ * Single source of visual constants for the whole renderer (main window and
+ * any future dialogs alike). The old PyQt5 app scattered these across
+ * theme_manager.py, custom_prompt.py, and settings_tab.py; centralizing them
+ * as CSS custom properties also means font/spacing scaling cascades to every
+ * descendant for free, with no bespoke "recursive font scaler" needed.
+ */
+:root {
+  color-scheme: light dark;
+
+  --color-bg: #f8f9fa;
+  --color-bg-elevated: #ffffff;
+  --color-text: #1a1a1a;
+  --color-text-muted: #5f6368;
+  --color-border: #dadce0;
+  --color-accent: #ffb000;
+  --color-danger: #d93025;
+  --color-warning: #f9ab00;
+
+  --titlebar-bg: #f8f9fa;
+  --titlebar-fg: #000000;
+  --titlebar-hover: #bbbbbb;
+  --titlebar-active: #999999;
+  --titlebar-close-hover: #e81123;
+  --titlebar-close-active: #94141e;
+
+  --font-family: 'Segoe UI', system-ui, sans-serif;
+  --font-scale: 1;
+  --font-size-base: calc(14px * var(--font-scale));
+
+  --titlebar-height: 34px;
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+}
+
+:root[data-theme='dark'] {
+  --color-bg: #202124;
+  --color-bg-elevated: #2b2b2b;
+  --color-text: #ffffff;
+  --color-text-muted: #b0b3b8;
+  --color-border: #3f4042;
+
+  --titlebar-bg: #202124;
+  --titlebar-fg: #ffffff;
+  --titlebar-hover: #555555;
+  --titlebar-active: #686868;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-bg: #202124;
+    --color-bg-elevated: #2b2b2b;
+    --color-text: #ffffff;
+    --color-text-muted: #b0b3b8;
+    --color-border: #3f4042;
+
+    --titlebar-bg: #202124;
+    --titlebar-fg: #ffffff;
+    --titlebar-hover: #555555;
+    --titlebar-active: #686868;
+  }
+}
