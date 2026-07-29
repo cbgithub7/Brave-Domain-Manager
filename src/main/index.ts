@@ -5,6 +5,7 @@ import { registerBackupHandlers } from './ipc/handlers/backup'
 import { registerDomainsHandlers } from './ipc/handlers/domains'
 import { registerHistoryHandlers } from './ipc/handlers/history'
 import { registerSettingsHandlers } from './ipc/handlers/settings'
+import { registerUpdateHandlers } from './ipc/handlers/updates'
 import { registerIpcHandlers } from './ipc/registerIpcHandlers'
 import { RegeditRsRegistryClient } from './services/regeditRsRegistryClient'
 import { FakeRegistryClient } from './testing/fakeRegistryClient'
@@ -14,6 +15,7 @@ import { DomainService } from './services/domainService'
 import { HistoryService } from './services/historyService'
 import { AppLogger } from './services/logger/logger'
 import { SettingsStore } from './services/settingsStore'
+import { UpdateService } from './services/updateService'
 import { createMainWindow } from './windows/mainWindow'
 
 const isTestMode = process.env.NODE_ENV === 'test'
@@ -48,7 +50,15 @@ app.whenReady().then(async () => {
   registerHistoryHandlers(domainService, historyService)
   registerBackupHandlers(backupService)
   registerSettingsHandlers(settingsStore, logger)
-  createMainWindow()
+  const mainWindow = createMainWindow()
+
+  // Never checks for updates in dev (no dev-app-update.yml, would just error)
+  // or in NODE_ENV=test (the Playwright E2E suite) - real network calls have
+  // no place in an automated test run.
+  const updatesEnabled = app.isPackaged && !isTestMode
+  const updateService = new UpdateService(logger, updatesEnabled)
+  registerUpdateHandlers(updateService, mainWindow)
+  updateService.checkForUpdates()
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow()

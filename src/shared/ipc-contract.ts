@@ -31,6 +31,11 @@ export const IPC = {
   settings: {
     get: 'settings:get',
     set: 'settings:set'
+  },
+  updates: {
+    status: 'updates:status',
+    install: 'updates:install',
+    statusChanged: 'updates:statusChanged'
   }
 } as const
 

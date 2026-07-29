@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { HistoryStatus } from '@shared/history-types'
 import { BackupPanel } from './features/backup/BackupPanel'
 import { DocsTab } from './features/docs/DocsTab'
@@ -11,6 +11,8 @@ import { Inspector } from './features/shell/Inspector'
 import { Rail, type MainView } from './features/shell/Rail'
 import { SettingsTab, useSettings } from './features/settings/SettingsTab'
 import { TitleBar } from './features/titlebar/TitleBar'
+import { UpdateDialog } from './features/update/UpdateDialog'
+import { useUpdateStatus } from './features/update/useUpdateStatus'
 import appIconUrl from './assets/app-icon.png'
 import styles from './App.module.css'
 
@@ -29,6 +31,19 @@ function AppContent(): JSX.Element {
   const [historyError, setHistoryError] = useState<string | null>(null)
   const { settings, updateSettings } = useSettings()
   const feedback = useFeedbackLog()
+  const updateStatus = useUpdateStatus()
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false)
+  const lastUpdateState = useRef(updateStatus.state)
+
+  useEffect(() => {
+    if (updateStatus.state === lastUpdateState.current) return
+    lastUpdateState.current = updateStatus.state
+    if (updateStatus.state === 'available') {
+      feedback.push('info', `Update v${updateStatus.version} is available — downloading in the background.`)
+    } else if (updateStatus.state === 'downloaded') {
+      feedback.push('success', `Update v${updateStatus.version} is ready — click Update in the sidebar to install.`)
+    }
+  }, [updateStatus, feedback])
 
   useEffect(() => {
     window.api.history.status().then((result) => {
@@ -112,7 +127,13 @@ function AppContent(): JSX.Element {
       <TitleBar title="Brave Domain Manager" appIcon={appIconUrl} />
       <HistoryToolbar status={historyStatus} onUndo={handleUndo} onRedo={handleRedo} error={historyError} />
       <div className={styles.body}>
-        <Rail active={activeView} domainCount={domainCount} onSelect={setActiveView} />
+        <Rail
+          active={activeView}
+          domainCount={domainCount}
+          onSelect={setActiveView}
+          updateStatus={updateStatus}
+          onUpdateClick={() => setUpdateDialogOpen(true)}
+        />
         <div className={styles.main}>
           {activeView === 'domains' && (
             <DomainList refreshSignal={refreshSignal} onMutated={handleMutated} onCountChange={setDomainCount} />
@@ -150,6 +171,15 @@ function AppContent(): JSX.Element {
         )}
       </div>
       <FeedbackLogPanel />
+
+      {updateDialogOpen && updateStatus.state === 'downloaded' && (
+        <UpdateDialog
+          version={updateStatus.version}
+          releaseNotes={updateStatus.releaseNotes}
+          onDismiss={() => setUpdateDialogOpen(false)}
+          onInstall={() => window.api.updates.install()}
+        />
+      )}
     </div>
   )
 }

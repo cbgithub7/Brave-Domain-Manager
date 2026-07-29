@@ -1,0 +1,39 @@
+.footer {
+  margin-top: auto;
+  padding-top: var(--spacing-2);
+  border-top: 1px solid var(--color-border);
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 7px 9px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  border: none;
+  text-align: left;
+  cursor: default;
+  background: var(--color-bg-sunken);
+  color: var(--color-text-muted);
+}
+
+.ready {
+  cursor: pointer;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+.ready:hover {
+  filter: brightness(1.05);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}

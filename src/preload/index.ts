@@ -5,6 +5,7 @@ import type { AddDomainsResult, DomainEntry, RemoveDomainsResult, StagedDomain }
 import type { HistoryStatus, UndoRedoResult } from '@shared/history-types'
 import { IPC, type IpcResult } from '@shared/ipc-contract'
 import type { AppSettings } from '@shared/settings-types'
+import type { UpdateStatus } from '@shared/update-types'
 
 const api = {
   window: {
@@ -46,6 +47,15 @@ const api = {
     get: (): Promise<IpcResult<AppSettings>> => ipcRenderer.invoke(IPC.settings.get),
     set: (patch: Partial<AppSettings>): Promise<IpcResult<AppSettings>> =>
       ipcRenderer.invoke(IPC.settings.set, patch)
+  },
+  updates: {
+    status: (): Promise<IpcResult<UpdateStatus>> => ipcRenderer.invoke(IPC.updates.status),
+    install: (): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC.updates.install),
+    onStatusChanged: (callback: (status: UpdateStatus) => void): (() => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, status: UpdateStatus): void => callback(status)
+      ipcRenderer.on(IPC.updates.statusChanged, listener)
+      return () => ipcRenderer.removeListener(IPC.updates.statusChanged, listener)
+    }
   }
 }
 

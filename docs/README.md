@@ -145,6 +145,10 @@ long-term snapshot mechanism, independent of Undo/Redo:
   changes, audit, security, performance, startup/shutdown, success/error).
   Logs are written to your user data folder and rotate daily. A small
   indicator next to the tabs always shows whether logging is currently on.
+- **Updates** — checked once on launch; a new version downloads in the
+  background and shows as a quiet indicator at the bottom of the sidebar.
+  Once ready, clicking it shows what changed before you choose to install
+  (which restarts the app).
 
 ## 8. Troubleshooting
 

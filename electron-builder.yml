@@ -32,3 +32,7 @@ nsis:
   artifactName: ${name}-${version}-setup.${ext}
   oneClick: false
   allowToChangeInstallationDirectory: true
+publish:
+  provider: github
+  owner: cbgithub7
+  repo: Brave-Domain-Manager

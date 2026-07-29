@@ -1,4 +1,6 @@
+import type { UpdateStatus } from '@shared/update-types'
 import { Pill } from '../../components/Pill'
+import { UpdateBadge } from '../update/UpdateBadge'
 import styles from './Rail.module.css'
 
 export type MainView = 'domains' | 'import' | 'backup' | 'settings' | 'docs'
@@ -7,9 +9,11 @@ interface RailProps {
   active: MainView
   domainCount: number
   onSelect: (view: MainView) => void
+  updateStatus: UpdateStatus
+  onUpdateClick: () => void
 }
 
-export function Rail({ active, domainCount, onSelect }: RailProps): JSX.Element {
+export function Rail({ active, domainCount, onSelect, updateStatus, onUpdateClick }: RailProps): JSX.Element {
   const item = (view: MainView, label: string): JSX.Element => (
     <button
       type="button"
@@ -35,6 +39,8 @@ export function Rail({ active, domainCount, onSelect }: RailProps): JSX.Element 
       <div className={styles.kicker}>App</div>
       {item('settings', 'Settings')}
       {item('docs', 'Documentation')}
+
+      <UpdateBadge status={updateStatus} onClick={onUpdateClick} />
     </nav>
   )
 }

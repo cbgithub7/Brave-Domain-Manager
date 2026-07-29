@@ -1,6 +1,6 @@
 {
   "name": "brave-domain-manager",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Manage Brave browser's domain blocklist in the Windows registry.",
   "main": "./out/main/index.js",
@@ -21,11 +21,13 @@
     "pretest:e2e": "npm run build",
     "test:e2e": "playwright test",
     "lint": "eslint . --ext .ts,.tsx",
-    "build:win": "electron-vite build && electron-builder --win"
+    "build:win": "electron-vite build && electron-builder --win",
+    "release:win": "electron-vite build && electron-builder --win --publish always"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^3.0.0",
+    "electron-updater": "^6.8.9",
     "fuse.js": "^7.5.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
