@@ -4,6 +4,7 @@ import type { BackupExportResult, BackupImportResult, RestoreMode } from '@share
 import type { AddDomainsResult, DomainEntry, RemoveDomainsResult, StagedDomain } from '@shared/domain-types'
 import type { HistoryStatus, UndoRedoResult } from '@shared/history-types'
 import { IPC, type IpcResult } from '@shared/ipc-contract'
+import type { AppSettings } from '@shared/settings-types'
 
 const api = {
   window: {
@@ -40,6 +41,11 @@ const api = {
       ipcRenderer.invoke(IPC.backup.export, filePath),
     import: (filePath: string, mode: RestoreMode): Promise<IpcResult<BackupImportResult>> =>
       ipcRenderer.invoke(IPC.backup.import, filePath, mode)
+  },
+  settings: {
+    get: (): Promise<IpcResult<AppSettings>> => ipcRenderer.invoke(IPC.settings.get),
+    set: (patch: Partial<AppSettings>): Promise<IpcResult<AppSettings>> =>
+      ipcRenderer.invoke(IPC.settings.set, patch)
   }
 }
 

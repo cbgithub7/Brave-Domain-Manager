@@ -2,6 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises'
 import type { BackupExportResult, BackupImportResult, BackupSnapshot, RestoreMode } from '@shared/backup-types'
 import { AppErrorException } from '../ipc/wrapHandler'
 import type { DomainService } from './domainService'
+import type { AppLogger } from './logger/logger'
 
 function isBackupSnapshot(value: unknown): value is BackupSnapshot {
   if (typeof value !== 'object' || value === null) return false
@@ -22,7 +23,10 @@ function isBackupSnapshot(value: unknown): value is BackupSnapshot {
  * and never got built.
  */
 export class BackupService {
-  constructor(private readonly domainService: DomainService) {}
+  constructor(
+    private readonly domainService: DomainService,
+    private readonly logger: AppLogger
+  ) {}
 
   async exportToFile(filePath: string): Promise<BackupExportResult> {
     const domains = await this.domainService.listBlockedDomains()
@@ -33,6 +37,7 @@ export class BackupService {
     }
 
     await writeFile(filePath, JSON.stringify(snapshot, null, 2), 'utf-8')
+    this.logger.log('userActivity', 'info', 'Exported backup', { filePath, count: snapshot.domains.length })
     return { count: snapshot.domains.length }
   }
 
@@ -71,6 +76,12 @@ export class BackupService {
     }
 
     const addResult = await this.domainService.addDomains(parsed.domains)
+    this.logger.log('userActivity', 'info', 'Restored backup', {
+      filePath,
+      mode,
+      added: addResult.added.length,
+      removedBeforeImport
+    })
     return {
       added: addResult.added.length,
       skipped: addResult.skipped,

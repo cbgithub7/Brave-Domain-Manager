@@ -27,6 +27,10 @@ export const IPC = {
     pickOpenFile: 'backup:pickOpenFile',
     export: 'backup:export',
     import: 'backup:import'
+  },
+  settings: {
+    get: 'settings:get',
+    set: 'settings:set'
   }
 } as const
 

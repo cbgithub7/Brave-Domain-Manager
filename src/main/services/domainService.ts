@@ -6,6 +6,7 @@ import { AppErrorException } from '../ipc/wrapHandler'
 import { runElevatedRegistryBatch } from './elevation/elevate'
 import type { DomainMutation } from './historyService'
 import type { HistoryService } from './historyService'
+import type { AppLogger } from './logger/logger'
 import type { RegistryClient } from './registryClient'
 
 export const BRAVE_URL_BLOCKLIST_PATH = 'HKLM\\SOFTWARE\\Policies\\BraveSoftware\\Brave\\URLBlocklist'
@@ -24,10 +25,12 @@ function createNameAllocator(existingNames: string[]): () => string {
 export class DomainService {
   constructor(
     private readonly registry: RegistryClient,
-    private readonly history: HistoryService
+    private readonly history: HistoryService,
+    private readonly logger: AppLogger
   ) {}
 
   async listBlockedDomains(): Promise<DomainEntry[]> {
+    this.logger.log('registryAccess', 'info', 'Listed blocked domains')
     const entries = await this.registry.listStringValues(BRAVE_URL_BLOCKLIST_PATH)
     return entries.map((entry) => ({ name: entry.name, domain: entry.value }))
   }
@@ -38,6 +41,7 @@ export class DomainService {
    * this, which was its own source of confusion and drift.
    */
   async addDomains(rawDomains: string[]): Promise<AddDomainsResult> {
+    this.logger.log('userActivity', 'info', 'Add domains requested', { count: rawDomains.length })
     const existing = await this.registry.listStringValues(BRAVE_URL_BLOCKLIST_PATH)
     const existingValues = new Set(existing.map((entry) => entry.value))
     const allocateName = createNameAllocator(existing.map((entry) => entry.name))
@@ -94,6 +98,12 @@ export class DomainService {
         apply,
         invert
       })
+      this.logger.log('audit', 'info', 'Domains added to registry', {
+        added: added.map((entry) => entry.domain)
+      })
+    }
+    if (skipped.length > 0) {
+      this.logger.log('successError', 'warn', 'Some domains skipped during add', { skipped })
     }
 
     return { added, skipped, history: this.history.status() }
@@ -110,6 +120,7 @@ export class DomainService {
   }
 
   async removeDomains(names: string[]): Promise<RemoveDomainsResult> {
+    this.logger.log('userActivity', 'info', 'Remove domains requested', { count: names.length })
     if (names.length === 0) {
       return { removed: [], failed: [], history: this.history.status() }
     }
@@ -151,6 +162,10 @@ export class DomainService {
         apply,
         invert
       })
+      this.logger.log('audit', 'info', 'Domains removed from registry', { removed })
+    }
+    if (failed.length > 0) {
+      this.logger.log('successError', 'warn', 'Some domains failed to remove', { failed })
     }
 
     return { removed, failed, history: this.history.status() }
@@ -182,6 +197,7 @@ export class DomainService {
     }
 
     this.history.commitUndo()
+    this.logger.log('audit', 'info', 'Undo applied', { label: action.label })
     return { label: action.label, history: this.history.status() }
   }
 
@@ -200,6 +216,7 @@ export class DomainService {
     }
 
     this.history.commitRedo()
+    this.logger.log('audit', 'info', 'Redo applied', { label: action.label })
     return { label: action.label, history: this.history.status() }
   }
 
