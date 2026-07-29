@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { Button } from '../../components/Button'
+import styles from './DocsTab.module.css'
 
 const DOC_URL = 'https://cbgithub7.github.io/Brave-Domain-Manager/'
 const LOAD_TIMEOUT_MS = 8000
@@ -31,38 +33,19 @@ export function DocsTab(): JSX.Element {
   }
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div className={styles.shell}>
       {failed && !loaded ? (
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 'var(--spacing-3)',
-            padding: 'var(--spacing-4)',
-            textAlign: 'center'
-          }}
-        >
+        <div className={styles.fallback}>
           <p>Couldn&apos;t load the documentation. Check your internet connection.</p>
-          <div style={{ display: 'flex', gap: 'var(--spacing-2)' }}>
-            <button type="button" onClick={handleRetry}>
-              Try again
-            </button>
-            <a href={DOC_URL} target="_blank" rel="noreferrer">
+          <div className={styles.actions}>
+            <Button onClick={handleRetry}>Try again</Button>
+            <a className={styles.link} href={DOC_URL} target="_blank" rel="noreferrer">
               Open in browser instead
             </a>
           </div>
         </div>
       ) : (
-        <iframe
-          key={attempt}
-          src={DOC_URL}
-          title="Documentation"
-          onLoad={handleLoad}
-          style={{ flex: 1, border: 'none', width: '100%', height: '100%' }}
-        />
+        <iframe key={attempt} src={DOC_URL} title="Documentation" onLoad={handleLoad} className={styles.frame} />
       )}
     </div>
   )

@@ -7,10 +7,12 @@ import { FileImportPanel } from './features/domains/FileImportPanel'
 import { FeedbackLogProvider, useFeedbackLog } from './features/feedback/FeedbackLogContext'
 import { FeedbackLogPanel } from './features/feedback/FeedbackLogPanel'
 import { HistoryToolbar } from './features/history/HistoryToolbar'
-import { LoggingStatusIndicator } from './features/settings/LoggingStatusIndicator'
+import { Inspector } from './features/shell/Inspector'
+import { Rail, type MainView } from './features/shell/Rail'
 import { SettingsTab, useSettings } from './features/settings/SettingsTab'
 import { TitleBar } from './features/titlebar/TitleBar'
 import appIconUrl from './assets/app-icon.png'
+import styles from './App.module.css'
 
 const EMPTY_HISTORY_STATUS: HistoryStatus = {
   canUndo: false,
@@ -19,11 +21,10 @@ const EMPTY_HISTORY_STATUS: HistoryStatus = {
   redoLabel: null
 }
 
-type ActiveTab = 'domains' | 'settings' | 'docs'
-
 function AppContent(): JSX.Element {
-  const [activeTab, setActiveTab] = useState<ActiveTab>('domains')
+  const [activeView, setActiveView] = useState<MainView>('domains')
   const [refreshSignal, setRefreshSignal] = useState(0)
+  const [domainCount, setDomainCount] = useState(0)
   const [historyStatus, setHistoryStatus] = useState<HistoryStatus>(EMPTY_HISTORY_STATUS)
   const [historyError, setHistoryError] = useState<string | null>(null)
   const { settings, updateSettings } = useSettings()
@@ -107,63 +108,45 @@ function AppContent(): JSX.Element {
   }, [handleUndo, handleRedo])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div className={styles.shell}>
       <TitleBar title="Brave Domain Manager" appIcon={appIconUrl} />
       <HistoryToolbar status={historyStatus} onUndo={handleUndo} onRedo={handleRedo} error={historyError} />
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--spacing-2)',
-          padding: '0 var(--spacing-4)',
-          borderBottom: '1px solid var(--color-border)'
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => setActiveTab('domains')}
-          style={{ fontWeight: activeTab === 'domains' ? 'bold' : 'normal' }}
-        >
-          Domain Management
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('settings')}
-          style={{ fontWeight: activeTab === 'settings' ? 'bold' : 'normal' }}
-        >
-          Settings
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('docs')}
-          style={{ fontWeight: activeTab === 'docs' ? 'bold' : 'normal' }}
-        >
-          Documentation
-        </button>
-        <LoggingStatusIndicator enabled={settings?.logging.enabled ?? false} />
-      </div>
-      <div style={{ flex: 1, overflow: 'auto', padding: activeTab === 'docs' ? 0 : 'var(--spacing-4)' }}>
-        {activeTab === 'domains' ? (
-          <>
-            <h1>Blocked Domains</h1>
-            <DomainList refreshSignal={refreshSignal} onMutated={handleMutated} />
-            <hr
-              style={{ margin: 'var(--spacing-4) 0', border: 'none', borderTop: '1px solid var(--color-border)' }}
-            />
-            <FileImportPanel onCommitted={handleMutated} />
-            <hr
-              style={{ margin: 'var(--spacing-4) 0', border: 'none', borderTop: '1px solid var(--color-border)' }}
-            />
-            <BackupPanel onRestored={handleMutated} />
-          </>
-        ) : activeTab === 'settings' ? (
-          settings ? (
-            <SettingsTab settings={settings} onChange={updateSettings} />
-          ) : (
-            <p>Loading settings…</p>
-          )
-        ) : (
-          <DocsTab />
+      <div className={styles.body}>
+        <Rail active={activeView} domainCount={domainCount} onSelect={setActiveView} />
+        <div className={styles.main}>
+          {activeView === 'domains' && (
+            <DomainList refreshSignal={refreshSignal} onMutated={handleMutated} onCountChange={setDomainCount} />
+          )}
+          {activeView === 'import' && (
+            <div className={`${styles.mainScroll} ${styles.viewPadded}`}>
+              <FileImportPanel onCommitted={handleMutated} />
+            </div>
+          )}
+          {activeView === 'backup' && (
+            <div className={`${styles.mainScroll} ${styles.viewPadded}`}>
+              <BackupPanel onRestored={handleMutated} />
+            </div>
+          )}
+          {activeView === 'settings' &&
+            (settings ? (
+              <div className={`${styles.mainScroll} ${styles.viewPadded}`}>
+                <SettingsTab settings={settings} onChange={updateSettings} />
+              </div>
+            ) : (
+              <p className={styles.viewPadded}>Loading settings…</p>
+            ))}
+          {activeView === 'docs' && (
+            <div className={styles.mainScroll}>
+              <DocsTab />
+            </div>
+          )}
+        </div>
+        {activeView === 'domains' && (
+          <Inspector
+            domainCount={domainCount}
+            historyStatus={historyStatus}
+            loggingEnabled={settings?.logging.enabled ?? false}
+          />
         )}
       </div>
       <FeedbackLogPanel />

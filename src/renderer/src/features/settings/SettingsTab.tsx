@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { LOG_CATEGORIES, type AppSettings, type LogCategory, type ThemePreference } from '@shared/settings-types'
+import { Card, CardBody, CardHead } from '../../components/Card'
+import styles from './SettingsTab.module.css'
 
 const CATEGORY_LABELS: Record<LogCategory, string> = {
   startupShutdown: 'Startup/Shutdown',
@@ -19,64 +21,76 @@ interface SettingsTabProps {
 
 export function SettingsTab({ settings, onChange }: SettingsTabProps): JSX.Element {
   return (
-    <div>
-      <h2>Theme</h2>
-      <div style={{ display: 'flex', gap: 'var(--spacing-3)', marginBottom: 'var(--spacing-4)' }}>
-        {(['system', 'light', 'dark'] as ThemePreference[]).map((option) => (
-          <label key={option}>
-            <input
-              type="radio"
-              name="theme"
-              checked={settings.theme === option}
-              onChange={() => onChange({ theme: option })}
-            />{' '}
-            {option === 'system' ? 'Follow system' : option[0].toUpperCase() + option.slice(1)}
-          </label>
-        ))}
-      </div>
+    <div className={styles.stack}>
+      <Card>
+        <CardHead>
+          <h3>Theme</h3>
+        </CardHead>
+        <CardBody>
+          <div className={styles.radioRow}>
+            {(['system', 'light', 'dark'] as ThemePreference[]).map((option) => (
+              <label key={option} className={styles.radio}>
+                <input type="radio" name="theme" checked={settings.theme === option} onChange={() => onChange({ theme: option })} />
+                {option === 'system' ? 'Follow system' : option[0].toUpperCase() + option.slice(1)}
+              </label>
+            ))}
+          </div>
+        </CardBody>
+      </Card>
 
-      <h2>Font scale</h2>
-      <div style={{ marginBottom: 'var(--spacing-4)' }}>
-        <select
-          value={settings.fontScale}
-          onChange={(event) => onChange({ fontScale: Number(event.target.value) })}
-        >
-          {[0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.4].map((scale) => (
-            <option key={scale} value={scale}>
-              {Math.round(scale * 100)}%
-            </option>
-          ))}
-        </select>
-      </div>
+      <Card>
+        <CardHead>
+          <h3>Font scale</h3>
+        </CardHead>
+        <CardBody>
+          <select
+            className={styles.select}
+            value={settings.fontScale}
+            onChange={(event) => onChange({ fontScale: Number(event.target.value) })}
+          >
+            {[0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.4].map((scale) => (
+              <option key={scale} value={scale}>
+                {Math.round(scale * 100)}%
+              </option>
+            ))}
+          </select>
+        </CardBody>
+      </Card>
 
-      <h2>Logging</h2>
-      <label style={{ display: 'block', marginBottom: 'var(--spacing-2)' }}>
-        <input
-          type="checkbox"
-          checked={settings.logging.enabled}
-          onChange={(event) => onChange({ logging: { ...settings.logging, enabled: event.target.checked } })}
-        />{' '}
-        Enable logging
-      </label>
-
-      <div style={{ paddingLeft: 'var(--spacing-4)' }}>
-        {LOG_CATEGORIES.map((category) => (
-          <label key={category} style={{ display: 'block' }}>
+      <Card>
+        <CardHead>
+          <h3>Logging</h3>
+        </CardHead>
+        <CardBody>
+          <label className={styles.checkboxRow}>
             <input
               type="checkbox"
-              disabled={!settings.logging.enabled}
-              checked={settings.logging.enabledCategories.includes(category)}
-              onChange={(event) => {
-                const enabledCategories = event.target.checked
-                  ? [...settings.logging.enabledCategories, category]
-                  : settings.logging.enabledCategories.filter((c) => c !== category)
-                onChange({ logging: { ...settings.logging, enabledCategories } })
-              }}
-            />{' '}
-            {CATEGORY_LABELS[category]}
+              checked={settings.logging.enabled}
+              onChange={(event) => onChange({ logging: { ...settings.logging, enabled: event.target.checked } })}
+            />
+            Enable logging
           </label>
-        ))}
-      </div>
+
+          <div className={styles.categoryGrid}>
+            {LOG_CATEGORIES.map((category) => (
+              <label key={category} className={styles.category}>
+                <input
+                  type="checkbox"
+                  disabled={!settings.logging.enabled}
+                  checked={settings.logging.enabledCategories.includes(category)}
+                  onChange={(event) => {
+                    const enabledCategories = event.target.checked
+                      ? [...settings.logging.enabledCategories, category]
+                      : settings.logging.enabledCategories.filter((c) => c !== category)
+                    onChange({ logging: { ...settings.logging, enabledCategories } })
+                  }}
+                />
+                {CATEGORY_LABELS[category]}
+              </label>
+            ))}
+          </div>
+        </CardBody>
+      </Card>
     </div>
   )
 }

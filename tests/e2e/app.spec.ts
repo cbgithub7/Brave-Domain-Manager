@@ -3,7 +3,8 @@ import { expect, test } from './fixtures'
 test.describe('app launch', () => {
   test('renders the titlebar and default tab', async ({ page }) => {
     await expect(page.locator('text=Brave Domain Manager')).toBeVisible()
-    await expect(page.locator('h1')).toHaveText('Blocked Domains')
+    await expect(page.getByRole('button', { name: 'Domains' })).toBeVisible()
+    await expect(page.getByPlaceholder('Search blocked domains…')).toBeVisible()
   })
 
   test('titlebar maximize/restore round-trips through IPC', async ({ page }) => {
@@ -48,7 +49,7 @@ test.describe('domain management (fake registry, no UAC)', () => {
     await page.getByRole('button', { name: 'Add domain' }).click()
     await expect(page.locator('text=/not a valid domain/')).toBeVisible()
     // App must still be responsive afterward - the old app used to crash here.
-    await expect(page.locator('h1')).toHaveText('Blocked Domains')
+    await expect(page.getByPlaceholder('example.com')).toBeEditable()
   })
 })
 

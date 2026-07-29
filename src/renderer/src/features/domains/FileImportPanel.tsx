@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import type { StagedDomain } from '@shared/domain-types'
 import type { HistoryStatus } from '@shared/history-types'
+import { Button } from '../../components/Button'
+import { Card, CardBody, CardHead } from '../../components/Card'
 import { useFeedbackLog } from '../feedback/FeedbackLogContext'
+import styles from './FileImportPanel.module.css'
 
 interface FileImportPanelProps {
   onCommitted: (status: HistoryStatus) => void
@@ -78,51 +81,55 @@ export function FileImportPanel({ onCommitted }: FileImportPanelProps): JSX.Elem
   }
 
   return (
-    <div>
-      <h2>Add from file</h2>
-      <p style={{ color: 'var(--color-text-muted)' }}>
-        Supported formats: .txt (one domain per line), .csv (one domain per row), .json (array of
-        domain strings).
-      </p>
-      <div style={{ display: 'flex', gap: 'var(--spacing-2)', marginBottom: 'var(--spacing-3)' }}>
-        <button type="button" onClick={handleBrowse} disabled={busy} title="Choose a domain list file">
-          Browse…
-        </button>
-        {filePath && <span style={{ alignSelf: 'center' }}>{filePath}</span>}
-      </div>
-
-      {error && <p style={{ color: 'var(--color-danger)' }}>{error}</p>}
-
-      {staged && (
-        <div>
-          <ul style={{ listStyle: 'none', padding: 0, maxHeight: 240, overflow: 'auto' }}>
-            {staged.map((entry, index) => (
-              <li key={`${entry.raw}-${index}`}>
-                {entry.status.valid ? (
-                  <span>{entry.status.cleaned}</span>
-                ) : (
-                  <span style={{ color: 'var(--color-danger)' }}>
-                    {entry.raw} — {entry.status.reason}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-          <div style={{ display: 'flex', gap: 'var(--spacing-2)' }}>
-            <button
-              type="button"
-              onClick={handleAddValid}
-              disabled={busy || validDomains.length === 0}
-              title="Add all valid domains from this file to the blocklist"
-            >
-              Add {validDomains.length} valid domain(s)
-            </button>
-            <button type="button" onClick={handleClear} disabled={busy} title="Discard the staged list">
-              Clear
-            </button>
-          </div>
+    <Card>
+      <CardHead>
+        <h3>Add from file</h3>
+      </CardHead>
+      <CardBody>
+        <p className={styles.intro}>
+          Supported formats: .txt (one domain per line), .csv (one domain per row), .json (array of
+          domain strings).
+        </p>
+        <div className={styles.browseRow}>
+          <Button onClick={handleBrowse} disabled={busy} title="Choose a domain list file">
+            Browse…
+          </Button>
+          {filePath && <span className={styles.filePath}>{filePath}</span>}
         </div>
-      )}
-    </div>
+
+        {error && <p className={styles.error}>{error}</p>}
+
+        {staged && (
+          <div>
+            <ul className={styles.stagedList}>
+              {staged.map((entry, index) => (
+                <li key={`${entry.raw}-${index}`} className={styles.stagedRow}>
+                  {entry.status.valid ? (
+                    <span>{entry.status.cleaned}</span>
+                  ) : (
+                    <span className={styles.invalid}>
+                      {entry.raw} — {entry.status.reason}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <div className={styles.actions}>
+              <Button
+                variant="primary"
+                onClick={handleAddValid}
+                disabled={busy || validDomains.length === 0}
+                title="Add all valid domains from this file to the blocklist"
+              >
+                Add {validDomains.length} valid domain(s)
+              </Button>
+              <Button onClick={handleClear} disabled={busy} title="Discard the staged list">
+                Clear
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardBody>
+    </Card>
   )
 }

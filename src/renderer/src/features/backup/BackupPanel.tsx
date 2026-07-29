@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import type { RestoreMode } from '@shared/backup-types'
 import type { HistoryStatus } from '@shared/history-types'
+import { Button } from '../../components/Button'
+import { Card, CardBody, CardHead } from '../../components/Card'
 import { useFeedbackLog } from '../feedback/FeedbackLogContext'
+import styles from './BackupPanel.module.css'
 
 interface BackupPanelProps {
   onRestored: (status: HistoryStatus) => void
@@ -68,47 +71,53 @@ export function BackupPanel({ onRestored }: BackupPanelProps): JSX.Element {
   }
 
   return (
-    <div>
-      <h2>Backup &amp; restore</h2>
-      <p style={{ color: 'var(--color-text-muted)' }}>
-        A deliberate snapshot you create on purpose - separate from Undo/Redo, for reverting to a
-        known-good state if something goes wrong later.
-      </p>
-      <div style={{ display: 'flex', gap: 'var(--spacing-2)', alignItems: 'center', marginBottom: 'var(--spacing-2)' }}>
-        <button type="button" onClick={handleExport} disabled={busy} title="Save the current blocklist to a file">
-          Export to file…
-        </button>
-        <span style={{ marginLeft: 'var(--spacing-3)' }}>Restore mode:</span>
-        <label>
-          <input
-            type="radio"
-            name="restore-mode"
-            checked={mode === 'merge'}
-            onChange={() => setMode('merge')}
-          />{' '}
-          Merge (add to current list)
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="restore-mode"
-            checked={mode === 'replace'}
-            onChange={() => setMode('replace')}
-          />{' '}
-          Replace (clear current list first)
-        </label>
-        <button
-          type="button"
-          onClick={handleImport}
-          disabled={busy}
-          title={mode === 'replace' ? 'Clear the current list, then restore from a backup file' : 'Add domains from a backup file to the current list'}
-        >
-          Restore from file…
-        </button>
-      </div>
+    <Card>
+      <CardHead>
+        <h3>Backup &amp; restore</h3>
+      </CardHead>
+      <CardBody>
+        <p className={styles.intro}>
+          A deliberate snapshot you create on purpose — separate from Undo/Redo, for reverting to a
+          known-good state if something goes wrong later.
+        </p>
 
-      {message && <p>{message}</p>}
-      {error && <p style={{ color: 'var(--color-danger)' }}>{error}</p>}
-    </div>
+        <div className={styles.section}>
+          <Button onClick={handleExport} disabled={busy} title="Save the current blocklist to a file">
+            Export to file…
+          </Button>
+        </div>
+
+        <div className={styles.section}>
+          <span className={styles.label}>Restore mode:</span>
+          <label className={styles.radio}>
+            <input type="radio" name="restore-mode" checked={mode === 'merge'} onChange={() => setMode('merge')} />
+            Merge (add to current list)
+          </label>
+          <label className={styles.radio}>
+            <input
+              type="radio"
+              name="restore-mode"
+              checked={mode === 'replace'}
+              onChange={() => setMode('replace')}
+            />
+            Replace (clear current list first)
+          </label>
+          <Button
+            onClick={handleImport}
+            disabled={busy}
+            title={
+              mode === 'replace'
+                ? 'Clear the current list, then restore from a backup file'
+                : 'Add domains from a backup file to the current list'
+            }
+          >
+            Restore from file…
+          </Button>
+        </div>
+
+        {message && <p className={styles.message}>{message}</p>}
+        {error && <p className={styles.error}>{error}</p>}
+      </CardBody>
+    </Card>
   )
 }

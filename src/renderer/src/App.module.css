@@ -1,0 +1,28 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.mainScroll {
+  flex: 1;
+  overflow: auto;
+}
+
+.viewPadded {
+  padding: var(--spacing-4);
+}

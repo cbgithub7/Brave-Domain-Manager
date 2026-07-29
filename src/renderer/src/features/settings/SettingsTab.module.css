@@ -1,0 +1,66 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.radioRow {
+  display: flex;
+  gap: var(--spacing-3);
+}
+
+.radio {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+.radio input {
+  accent-color: var(--color-accent);
+}
+
+.select {
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: inherit;
+}
+.select:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin-bottom: var(--spacing-2);
+}
+.checkboxRow input {
+  accent-color: var(--color-accent);
+}
+
+.categoryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-1) var(--spacing-4);
+  padding-left: var(--spacing-4);
+}
+
+.category {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text);
+}
+.category input {
+  accent-color: var(--color-accent);
+}
+.category:has(input:disabled) {
+  color: var(--color-text-muted);
+}

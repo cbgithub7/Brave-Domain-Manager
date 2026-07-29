@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react'
+import { Button } from '../../components/Button'
 import { useFeedbackLog, type FeedbackLevel } from './FeedbackLogContext'
+import styles from './FeedbackLogPanel.module.css'
 
 const LEVEL_COLORS: Record<FeedbackLevel, string> = {
   info: 'var(--color-text)',
-  success: 'var(--color-text)',
+  success: 'var(--color-success)',
   warn: 'var(--color-warning)',
   error: 'var(--color-danger)'
 }
@@ -22,42 +24,16 @@ export function FeedbackLogPanel(): JSX.Element {
   }, [entries])
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: 140,
-        borderTop: '1px solid var(--color-border)',
-        flexShrink: 0
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: 'var(--spacing-1) var(--spacing-4)',
-          fontSize: '11px',
-          color: 'var(--color-text-muted)'
-        }}
-      >
+    <div className={styles.panel}>
+      <div className={styles.header}>
         <span>Activity</span>
-        <button type="button" onClick={clear} title="Clear activity log">
+        <Button onClick={clear} title="Clear activity log">
           Clear
-        </button>
+        </Button>
       </div>
-      <div
-        ref={scrollRef}
-        style={{
-          flex: 1,
-          overflow: 'auto',
-          padding: '0 var(--spacing-4) var(--spacing-2)',
-          fontSize: '12px',
-          fontFamily: 'Consolas, monospace'
-        }}
-      >
+      <div ref={scrollRef} className={styles.log}>
         {entries.length === 0 ? (
-          <p style={{ color: 'var(--color-text-muted)' }}>No activity yet.</p>
+          <p className={styles.empty}>No activity yet.</p>
         ) : (
           entries.map((entry) => (
             <div key={entry.id} style={{ color: LEVEL_COLORS[entry.level] }}>

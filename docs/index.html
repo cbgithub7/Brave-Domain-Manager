@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Brave Domain Manager — Documentation</title>
+<meta name="description" content="Documentation for Brave Domain Manager, a Windows desktop app for managing Brave's domain blocklist policy." />
+<link rel="icon" href="assets/app-icon.png" />
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <img class="icon" src="assets/app-icon.png" alt="" />
+  <span class="name">Brave Domain Manager</span>
+  <div class="spacer"></div>
+  <div class="topbar-links">
+    <a href="https://github.com/cbgithub7/Brave-Domain-Manager">GitHub</a>
+    <a href="https://github.com/cbgithub7/Brave-Domain-Manager/issues">Issues</a>
+    <a class="btn btn-primary" href="https://github.com/cbgithub7/Brave-Domain-Manager/releases/latest">Download</a>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="group">
+      <p class="kicker">Overview</p>
+      <nav>
+        <a href="#introduction">Introduction</a>
+        <a href="#installation">Installation</a>
+        <a href="#getting-started">Getting Started</a>
+      </nav>
+    </div>
+    <div class="group">
+      <p class="kicker">Using the app</p>
+      <nav>
+        <a href="#managing-domains">Managing Domains</a>
+        <a href="#undo-redo">Undo &amp; Redo</a>
+        <a href="#backup-restore">Backup &amp; Restore</a>
+        <a href="#settings">Settings</a>
+      </nav>
+    </div>
+    <div class="group">
+      <p class="kicker">Reference</p>
+      <nav>
+        <a href="#troubleshooting">Troubleshooting</a>
+        <a href="#license">License</a>
+        <a href="#resources">Resources</a>
+      </nav>
+    </div>
+  </aside>
+
+  <main class="content">
+
+    <section id="introduction" class="hero">
+      <div class="hero-copy">
+        <h1>Manage Brave's domain blocklist without touching regedit.</h1>
+        <p>
+          Brave supports blocking specific domains via a machine-wide policy stored
+          in the Windows registry, but Brave itself has no UI for managing that
+          list. Brave Domain Manager fills that gap — add, remove, search,
+          undo/redo, and back up your blocklist from a normal desktop app.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="https://github.com/cbgithub7/Brave-Domain-Manager/releases/latest">Download latest release</a>
+          <a class="btn" href="#getting-started">Get started →</a>
+        </div>
+      </div>
+
+      <div class="shot">
+        <img src="assets/screenshots/domains-light.png" alt="Brave Domain Manager showing five sample blocked domains in the Domains view, with the Undo/Redo toolbar, a search field, and a Status/History/Logging inspector panel on the right." />
+        <div class="shot-caption">The Domains view — rail navigation on the left, blocklist in the middle, live status in the inspector on the right.</div>
+      </div>
+
+      <div class="grid-3">
+        <div class="feature-card">
+          <h4>Content filtering</h4>
+          <p>Block sites at the browser-policy level, independent of any single profile or extension.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Bulk management</h4>
+          <p>Import or export whole lists of domains in one batch instead of one at a time.</p>
+        </div>
+        <div class="feature-card">
+          <h4>Safety net</h4>
+          <p>Every change is undoable, and you can export a snapshot to restore later if something goes wrong.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="installation">
+      <h2>Installation</h2>
+      <p class="eyebrow">Windows 10/11, 64-bit</p>
+
+      <h3>Download &amp; install</h3>
+      <ol class="steps">
+        <li>Get the latest installer from the <a href="https://github.com/cbgithub7/Brave-Domain-Manager/releases/latest">Releases page</a> — <code>brave-domain-manager-&lt;version&gt;-setup.exe</code>.</li>
+        <li>Run the downloaded <code>.exe</code>. Windows SmartScreen may warn that the app is unrecognized, since the build isn't code-signed. Choose <strong>More info → Run anyway</strong> to proceed.</li>
+        <li>Follow the installer prompts — you can choose the install directory, and a shortcut is added to the Start Menu.</li>
+      </ol>
+
+      <div class="callout">
+        <strong>Prerequisites:</strong> Windows 10 or 11 (64-bit), and the
+        <a href="https://brave.com/">Brave browser</a> installed. Brave doesn't need to be running while you use this app.
+      </div>
+
+      <h3>Building from source</h3>
+      <p>
+        Developers can build the app directly instead of using a pre-built installer. See the
+        <a href="https://github.com/cbgithub7/Brave-Domain-Manager#building-from-source">main repository README</a>
+        for build instructions.
+      </p>
+    </section>
+
+    <section id="getting-started">
+      <h2>Getting Started</h2>
+      <p>
+        Launch <strong>Brave Domain Manager</strong> from the Start Menu. The app opens directly to
+        the Domains view, showing your currently blocked domains.
+      </p>
+      <div class="callout">
+        <strong>No admin launch required.</strong> The app starts as a regular user; Windows only
+        prompts for elevation (UAC) at the moment you actually add or remove a domain, since writing
+        to the registry is the only operation that needs admin rights. Reading the list, searching,
+        and browsing Settings never require elevation.
+      </div>
+    </section>
+
+    <section id="managing-domains">
+      <h2>Managing Domain Entries</h2>
+
+      <h3>Adding a single domain</h3>
+      <ol class="steps">
+        <li>Type a domain into the field at the top of the Domains view — format <code>[subdomain.]domain.tld</code>, e.g. <code>example.com</code> or <code>ads.tracker.example.com</code>.</li>
+        <li>Click <strong>Add domain</strong> (or press Enter).</li>
+        <li>Approve the UAC prompt. The domain is written to the registry and appears in the list immediately.</li>
+      </ol>
+
+      <h3>Adding domains from a file</h3>
+      <div class="shot">
+        <img src="assets/screenshots/import-light.png" alt="The Add from file view, with a Browse button and a note describing supported .txt, .csv, and .json formats." />
+        <div class="shot-caption">Add from file — reached via the rail's Actions group.</div>
+      </div>
+      <ol class="steps">
+        <li>Under <strong>Add from file</strong>, click <strong>Browse…</strong>.</li>
+        <li>Choose a <code>.txt</code> (one domain per line), <code>.csv</code> (one domain per row), or <code>.json</code> file (an array of domain strings).</li>
+        <li>Each entry is validated and staged before anything is written — invalid entries and domains already on your blocklist are flagged with a reason and skipped automatically.</li>
+        <li>Click <strong>Add N valid domain(s)</strong> to commit the batch. This triggers exactly one UAC prompt for the whole batch, not one per domain.</li>
+      </ol>
+
+      <h3>Removing domains &amp; searching</h3>
+      <p>
+        Click <strong>Remove</strong> on a single row, or check multiple boxes and click <strong>Delete
+        selected</strong> to remove several at once. The <strong>Search blocked domains…</strong> field
+        does fuzzy matching, so minor typos or partial names still find the right entry.
+      </p>
+    </section>
+
+    <section id="undo-redo">
+      <h2>Undo &amp; Redo</h2>
+      <p>Every add or remove is undoable:</p>
+      <ul>
+        <li>Use the <strong>Undo</strong>/<strong>Redo</strong> buttons in the toolbar, which show what action they'd affect.</li>
+        <li>Or use <strong>Ctrl+Z</strong> / <strong>Ctrl+Y</strong> (<strong>Ctrl+Shift+Z</strong> also works for redo). These are ignored while a text field has focus, so they never interfere with normal text editing.</li>
+      </ul>
+      <p>
+        History is per-session — it resets when you close the app. If the registry changes outside the
+        app between an action and its undo (another instance of the app, or a manual <code>regedit</code>
+        edit touching the same entry), the app detects the conflict and refuses to overwrite it rather
+        than silently clobbering the unrelated change. For anything you want to keep permanently, use
+        Backup &amp; Restore instead.
+      </p>
+    </section>
+
+    <section id="backup-restore">
+      <h2>Backup &amp; Restore</h2>
+      <div class="shot">
+        <img src="assets/screenshots/backup-light.png" alt="The Backup and Restore view, with an Export to file button and Merge/Replace restore mode radio buttons next to a Restore from file button." />
+        <div class="shot-caption">A deliberate, long-term snapshot mechanism — independent of Undo/Redo.</div>
+      </div>
+      <ul>
+        <li><strong>Export to file…</strong> saves your current blocklist to a JSON file you choose.</li>
+        <li><strong>Restore from file…</strong> loads a previously exported (or hand-written) JSON snapshot, in one of two modes:
+          <ul>
+            <li><strong>Merge</strong> — adds the snapshot's domains to your current list; anything already blocked is skipped.</li>
+            <li><strong>Replace</strong> — clears your current list first, then restores exactly what's in the snapshot.</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <section id="settings">
+      <h2>Settings</h2>
+      <div class="shot">
+        <img src="assets/screenshots/settings-light.png" alt="The Settings view, with Theme radio buttons (Follow system, Light, Dark), a Font scale dropdown, and a Logging section with an Enable logging checkbox and eight category checkboxes." />
+        <div class="shot-caption">Theme, font scale, and per-category logging — all take effect immediately, no restart.</div>
+      </div>
+      <ul>
+        <li><strong>Theme</strong> — Light, Dark, or Follow system.</li>
+        <li><strong>Font scale</strong> — 70%–140%, applied immediately across the whole app.</li>
+        <li><strong>Logging</strong> — disabled by default. When enabled, choose which categories to record (registry access, user activity, configuration changes, audit, security, performance, startup/shutdown, success/error). Logs are written to your user data folder and rotate daily.</li>
+      </ul>
+
+      <h3>Dark theme</h3>
+      <p>Switching Theme to Dark (or Follow system on a dark-mode machine) restyles the whole app immediately:</p>
+      <div class="shot">
+        <img src="assets/screenshots/domains-dark.png" alt="The same Domains view shown in dark theme, with a graphite background, cream text, and a teal accent color." />
+        <div class="shot-caption">The same Domains view in dark theme.</div>
+      </div>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>Troubleshooting</h2>
+
+      <details class="qa">
+        <summary>"Windows protected your PC" (SmartScreen)</summary>
+        <p>This is expected for an unsigned build — there's no publisher certificate. Choose <strong>More info → Run anyway</strong>. If you'd rather verify the source first, see <a href="#installation">Building from source</a>.</p>
+      </details>
+
+      <details class="qa">
+        <summary>A UAC prompt appears when I add or remove a domain</summary>
+        <p>Expected, by design — writing to the registry requires administrator rights, so the app requests elevation only for that specific action, not for the whole app. Declining the prompt cancels just that one add/remove.</p>
+      </details>
+
+      <details class="qa">
+        <summary>My domain was rejected as invalid</summary>
+        <p>Domains must match <code>[subdomain.]domain.tld</code> — for example <code>example.com</code> or <code>ads.tracker.example.co.uk</code>. Leading <code>http://</code>, <code>https://</code>, and <code>www.</code> are stripped automatically, and anything after a <code>/</code> is ignored, so pasting a full URL still works.</p>
+      </details>
+
+      <details class="qa">
+        <summary>Undo/redo says it can't complete an action</summary>
+        <p>This means the registry changed outside the app since that action was recorded (see <a href="#undo-redo">Undo &amp; Redo</a>) — the app refuses to overwrite data it didn't create, rather than failing silently. Check the current state of the entry in question and adjust manually if needed.</p>
+      </details>
+
+      <details class="qa">
+        <summary>The Documentation tab won't load in the app</summary>
+        <p>If you're offline, the embedded copy of this site can't load. The app shows a retry option and a link to open this page in your regular browser instead.</p>
+      </details>
+    </section>
+
+    <section id="license">
+      <h2>License</h2>
+      <p>
+        Brave Domain Manager is licensed under the
+        <a href="https://github.com/cbgithub7/Brave-Domain-Manager/blob/main/LICENSE">MIT License</a>.
+      </p>
+    </section>
+
+    <section id="resources">
+      <h2>Additional Resources</h2>
+      <ul>
+        <li><a href="https://github.com/cbgithub7/Brave-Domain-Manager">GitHub Repository</a></li>
+        <li><a href="https://github.com/cbgithub7/Brave-Domain-Manager/releases">Releases</a></li>
+        <li><a href="https://github.com/cbgithub7/Brave-Domain-Manager/issues">Issue Tracker</a></li>
+      </ul>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <p>Brave Domain Manager · MIT License</p>
+  <a href="https://github.com/cbgithub7/Brave-Domain-Manager">GitHub</a>·
+  <a href="https://github.com/cbgithub7/Brave-Domain-Manager/releases">Releases</a>·
+  <a href="https://github.com/cbgithub7/Brave-Domain-Manager/issues">Issues</a>
+</footer>
+
+<script>
+  // Highlight the sidebar link for whichever section is currently in view.
+  const links = Array.from(document.querySelectorAll('.sidebar a'));
+  const sections = links.map((a) => document.querySelector(a.getAttribute('href')));
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        const index = sections.indexOf(entry.target);
+        if (index === -1) return;
+        if (entry.isIntersecting) {
+          links.forEach((a) => a.classList.remove('active'));
+          links[index].classList.add('active');
+        }
+      });
+    },
+    { rootMargin: '-40% 0px -55% 0px' }
+  );
+  sections.forEach((section) => section && observer.observe(section));
+</script>
+
+</body>
+</html>

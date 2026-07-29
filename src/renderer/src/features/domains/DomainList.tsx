@@ -2,16 +2,21 @@ import Fuse from 'fuse.js'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { DomainEntry } from '@shared/domain-types'
 import type { HistoryStatus } from '@shared/history-types'
+import { Button } from '../../components/Button'
+import { TextField } from '../../components/TextField'
 import { useFeedbackLog } from '../feedback/FeedbackLogContext'
+import styles from './DomainList.module.css'
 
 interface DomainListProps {
   /** Bump this to force a refetch (e.g. after FileImportPanel commits an add). */
   refreshSignal?: number
   /** Called with the fresh history status after a successful add/remove. */
   onMutated?: (status: HistoryStatus) => void
+  /** Called whenever the current domain count is known, for the rail badge and inspector. */
+  onCountChange?: (count: number) => void
 }
 
-export function DomainList({ refreshSignal, onMutated }: DomainListProps): JSX.Element {
+export function DomainList({ refreshSignal, onMutated, onCountChange }: DomainListProps): JSX.Element {
   const [domains, setDomains] = useState<DomainEntry[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [newDomain, setNewDomain] = useState('')
@@ -25,10 +30,11 @@ export function DomainList({ refreshSignal, onMutated }: DomainListProps): JSX.E
     if (result.ok) {
       setDomains(result.data)
       setError(null)
+      onCountChange?.(result.data.length)
     } else {
       setError(result.error.message)
     }
-  }, [])
+  }, [onCountChange])
 
   useEffect(() => {
     refresh()
@@ -110,10 +116,18 @@ export function DomainList({ refreshSignal, onMutated }: DomainListProps): JSX.E
   }
 
   return (
-    <div>
-      <div style={{ display: 'flex', gap: 'var(--spacing-2)', marginBottom: 'var(--spacing-3)' }}>
-        <input
-          type="text"
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div className={styles.toolbar}>
+        <TextField
+          className={styles.searchField}
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          placeholder="Search blocked domains…"
+          title="Fuzzy search the blocked domains list"
+        />
+        <TextField
+          className={styles.addField}
+          mono
           value={newDomain}
           onChange={(event) => setNewDomain(event.target.value)}
           onKeyDown={(event) => {
@@ -122,83 +136,53 @@ export function DomainList({ refreshSignal, onMutated }: DomainListProps): JSX.E
           placeholder="example.com"
           disabled={busy}
           title="Enter a domain to add to the blocklist"
-          style={{ flex: 1, padding: 'var(--spacing-2)' }}
         />
-        <button type="button" onClick={handleAdd} disabled={busy || !newDomain.trim()} title="Add this domain">
+        <Button variant="primary" onClick={handleAdd} disabled={busy || !newDomain.trim()} title="Add this domain">
           Add domain
-        </button>
+        </Button>
       </div>
 
-      {error && <p style={{ color: 'var(--color-danger)' }}>{error}</p>}
+      {error && <p className={styles.error}>{error}</p>}
 
       {domains === null ? (
-        <p>Loading blocked domains…</p>
+        <p className={styles.empty}>Loading blocked domains…</p>
       ) : domains.length === 0 ? (
-        <p>No domains are currently blocked.</p>
+        <p className={styles.empty}>No domains are currently blocked.</p>
       ) : (
-        <div>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              gap: 'var(--spacing-2)',
-              marginBottom: 'var(--spacing-2)'
-            }}
-          >
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search blocked domains…"
-              title="Fuzzy search the blocked domains list"
-              style={{ flex: 1, padding: 'var(--spacing-2)' }}
-            />
-            <button
-              type="button"
+        <>
+          <div className={styles.summary}>
+            <span>
+              {searchQuery.trim()
+                ? `${displayedDomains.length} of ${domains.length} match`
+                : `${domains.length} domain(s) blocked`}
+            </span>
+            <span className={styles.spacer} />
+            <Button
               onClick={() => handleRemove(Array.from(selected))}
               disabled={busy || selected.size === 0}
               title="Delete all checked domains"
             >
               Delete selected ({selected.size})
-            </button>
+            </Button>
           </div>
-          <p style={{ color: 'var(--color-text-muted)', fontSize: '12px' }}>
-            {searchQuery.trim()
-              ? `${displayedDomains.length} of ${domains.length} domain(s) match.`
-              : `${domains.length} domain(s) currently blocked.`}
-          </p>
-          <ul style={{ listStyle: 'none', padding: 0 }}>
+          <ul className={styles.list}>
             {displayedDomains.map((entry) => (
-              <li
-                key={entry.name}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: 'var(--spacing-1) 0'
-                }}
-              >
-                <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)' }}>
+              <li key={entry.name} className={styles.row}>
+                <label className={styles.rowLabel}>
                   <input
                     type="checkbox"
                     checked={selected.has(entry.name)}
                     onChange={() => toggleSelected(entry.name)}
                   />
-                  {entry.domain}
+                  <span>{entry.domain}</span>
                 </label>
-                <button
-                  type="button"
-                  onClick={() => handleRemove([entry.name])}
-                  disabled={busy}
-                  title={`Remove ${entry.domain}`}
-                >
+                <Button variant="danger" onClick={() => handleRemove([entry.name])} disabled={busy} title={`Remove ${entry.domain}`}>
                   Remove
-                </button>
+                </Button>
               </li>
             ))}
           </ul>
-        </div>
+        </>
       )}
     </div>
   )

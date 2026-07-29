@@ -1,4 +1,6 @@
 import type { HistoryStatus } from '@shared/history-types'
+import { Button } from '../../components/Button'
+import styles from './HistoryToolbar.module.css'
 
 interface HistoryToolbarProps {
   status: HistoryStatus
@@ -9,32 +11,14 @@ interface HistoryToolbarProps {
 
 export function HistoryToolbar({ status, onUndo, onRedo, error }: HistoryToolbarProps): JSX.Element {
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'var(--spacing-2)',
-        padding: 'var(--spacing-2) var(--spacing-4)',
-        borderBottom: '1px solid var(--color-border)'
-      }}
-    >
-      <button
-        type="button"
-        onClick={onUndo}
-        disabled={!status.canUndo}
-        title={status.undoLabel ?? 'Nothing to undo'}
-      >
+    <div className={styles.bar}>
+      <Button onClick={onUndo} disabled={!status.canUndo} title={status.undoLabel ?? 'Nothing to undo'}>
         ↶ Undo{status.undoLabel ? `: ${status.undoLabel}` : ''}
-      </button>
-      <button
-        type="button"
-        onClick={onRedo}
-        disabled={!status.canRedo}
-        title={status.redoLabel ?? 'Nothing to redo'}
-      >
+      </Button>
+      <Button onClick={onRedo} disabled={!status.canRedo} title={status.redoLabel ?? 'Nothing to redo'}>
         ↷ Redo{status.redoLabel ? `: ${status.redoLabel}` : ''}
-      </button>
-      {error && <span style={{ color: 'var(--color-danger)' }}>{error}</span>}
+      </Button>
+      {error && <span className={styles.error}>{error}</span>}
     </div>
   )
 }

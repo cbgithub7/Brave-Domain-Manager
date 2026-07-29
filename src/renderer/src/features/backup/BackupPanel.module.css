@@ -1,0 +1,39 @@
+.intro {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  margin: 0 0 var(--spacing-4);
+}
+
+.section {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-3);
+}
+
+.label {
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.radio {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+.radio input {
+  accent-color: var(--color-accent);
+}
+
+.message {
+  font-size: 13px;
+  margin: 0;
+}
+
+.error {
+  color: var(--color-danger);
+  font-size: 13px;
+  margin: 0;
+}

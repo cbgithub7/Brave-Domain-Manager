@@ -4,7 +4,7 @@
 // blindly. Never throws - the old app crashed on invalid manual/file input
 // because the exception couldn't reach the feedback UI cleanly; this returns
 // a result instead.
-const DOMAIN_PATTERN = /^([a-zA-Z0-9-]+\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/
+const DOMAIN_PATTERN = /^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/
 
 export type DomainValidationResult = { valid: true; cleaned: string } | { valid: false; reason: string }
 

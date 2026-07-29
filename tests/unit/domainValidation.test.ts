@@ -12,6 +12,11 @@ describe('validateDomain', () => {
     expect(result.valid).toBe(true)
   })
 
+  it('accepts multiple levels of subdomain', () => {
+    const result = validateDomain('ads.trackerhub.example.com')
+    expect(result.valid).toBe(true)
+  })
+
   it('strips a leading protocol and www', () => {
     const result = validateDomain('https://www.example.com')
     expect(result).toEqual({ valid: true, cleaned: 'example.com' })
