@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { RestoreMode } from '@shared/backup-types'
 import type { HistoryStatus } from '@shared/history-types'
+import { useFeedbackLog } from '../feedback/FeedbackLogContext'
 
 interface BackupPanelProps {
   onRestored: (status: HistoryStatus) => void
@@ -11,6 +12,7 @@ export function BackupPanel({ onRestored }: BackupPanelProps): JSX.Element {
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const feedback = useFeedbackLog()
 
   const handleExport = async (): Promise<void> => {
     setError(null)
@@ -27,9 +29,12 @@ export function BackupPanel({ onRestored }: BackupPanelProps): JSX.Element {
     setBusy(false)
 
     if (exportResult.ok) {
-      setMessage(`Exported ${exportResult.data.count} domain(s) to ${pickResult.data}.`)
+      const text = `Exported ${exportResult.data.count} domain(s) to ${pickResult.data}.`
+      setMessage(text)
+      feedback.push('success', text)
     } else {
       setError(exportResult.error.message)
+      feedback.push('error', exportResult.error.message)
     }
   }
 
@@ -52,10 +57,13 @@ export function BackupPanel({ onRestored }: BackupPanelProps): JSX.Element {
       const parts = [`Restored ${added} domain(s)`]
       if (mode === 'replace') parts.push(`removed ${removedBeforeImport} existing domain(s) first`)
       if (skipped.length > 0) parts.push(`skipped ${skipped.length}: ${skipped.map((s) => s.reason).join(' ')}`)
-      setMessage(parts.join('; ') + '.')
+      const text = parts.join('; ') + '.'
+      setMessage(text)
+      feedback.push('success', text)
       onRestored(importResult.data.history)
     } else {
       setError(importResult.error.message)
+      feedback.push('error', importResult.error.message)
     }
   }
 
@@ -67,7 +75,7 @@ export function BackupPanel({ onRestored }: BackupPanelProps): JSX.Element {
         known-good state if something goes wrong later.
       </p>
       <div style={{ display: 'flex', gap: 'var(--spacing-2)', alignItems: 'center', marginBottom: 'var(--spacing-2)' }}>
-        <button type="button" onClick={handleExport} disabled={busy}>
+        <button type="button" onClick={handleExport} disabled={busy} title="Save the current blocklist to a file">
           Export to file…
         </button>
         <span style={{ marginLeft: 'var(--spacing-3)' }}>Restore mode:</span>
@@ -89,7 +97,12 @@ export function BackupPanel({ onRestored }: BackupPanelProps): JSX.Element {
           />{' '}
           Replace (clear current list first)
         </label>
-        <button type="button" onClick={handleImport} disabled={busy}>
+        <button
+          type="button"
+          onClick={handleImport}
+          disabled={busy}
+          title={mode === 'replace' ? 'Clear the current list, then restore from a backup file' : 'Add domains from a backup file to the current list'}
+        >
           Restore from file…
         </button>
       </div>

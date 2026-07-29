@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { StagedDomain } from '@shared/domain-types'
 import type { HistoryStatus } from '@shared/history-types'
+import { useFeedbackLog } from '../feedback/FeedbackLogContext'
 
 interface FileImportPanelProps {
   onCommitted: (status: HistoryStatus) => void
@@ -11,6 +12,7 @@ export function FileImportPanel({ onCommitted }: FileImportPanelProps): JSX.Elem
   const [staged, setStaged] = useState<StagedDomain[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const feedback = useFeedbackLog()
 
   const loadFile = async (path: string): Promise<void> => {
     setBusy(true)
@@ -19,9 +21,11 @@ export function FileImportPanel({ onCommitted }: FileImportPanelProps): JSX.Elem
     setBusy(false)
     if (result.ok) {
       setStaged(result.data)
+      feedback.push('info', `Loaded ${result.data.length} entries from ${path}.`)
     } else {
       setError(result.error.message)
       setStaged(null)
+      feedback.push('error', result.error.message)
     }
   }
 
@@ -30,6 +34,7 @@ export function FileImportPanel({ onCommitted }: FileImportPanelProps): JSX.Elem
     const result = await window.api.domains.pickFile()
     if (!result.ok) {
       setError(result.error.message)
+      feedback.push('error', result.error.message)
       return
     }
     if (result.data) {
@@ -50,13 +55,19 @@ export function FileImportPanel({ onCommitted }: FileImportPanelProps): JSX.Elem
     setBusy(false)
     if (result.ok) {
       if (result.data.skipped.length > 0) {
-        setError(result.data.skipped.map((s) => `${s.domain}: ${s.reason}`).join(' '))
+        const message = result.data.skipped.map((s) => `${s.domain}: ${s.reason}`).join(' ')
+        setError(message)
+        feedback.push('warn', message)
+      }
+      if (result.data.added.length > 0) {
+        feedback.push('success', `Added ${result.data.added.length} domain(s) from file.`)
       }
       onCommitted(result.data.history)
       setStaged(null)
       setFilePath(null)
     } else {
       setError(result.error.message)
+      feedback.push('error', result.error.message)
     }
   }
 
@@ -74,7 +85,7 @@ export function FileImportPanel({ onCommitted }: FileImportPanelProps): JSX.Elem
         domain strings).
       </p>
       <div style={{ display: 'flex', gap: 'var(--spacing-2)', marginBottom: 'var(--spacing-3)' }}>
-        <button type="button" onClick={handleBrowse} disabled={busy}>
+        <button type="button" onClick={handleBrowse} disabled={busy} title="Choose a domain list file">
           Browse…
         </button>
         {filePath && <span style={{ alignSelf: 'center' }}>{filePath}</span>}
@@ -98,10 +109,15 @@ export function FileImportPanel({ onCommitted }: FileImportPanelProps): JSX.Elem
             ))}
           </ul>
           <div style={{ display: 'flex', gap: 'var(--spacing-2)' }}>
-            <button type="button" onClick={handleAddValid} disabled={busy || validDomains.length === 0}>
+            <button
+              type="button"
+              onClick={handleAddValid}
+              disabled={busy || validDomains.length === 0}
+              title="Add all valid domains from this file to the blocklist"
+            >
               Add {validDomains.length} valid domain(s)
             </button>
-            <button type="button" onClick={handleClear} disabled={busy}>
+            <button type="button" onClick={handleClear} disabled={busy} title="Discard the staged list">
               Clear
             </button>
           </div>

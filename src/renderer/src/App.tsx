@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { HistoryStatus } from '@shared/history-types'
 import { BackupPanel } from './features/backup/BackupPanel'
+import { DocsTab } from './features/docs/DocsTab'
 import { DomainList } from './features/domains/DomainList'
 import { FileImportPanel } from './features/domains/FileImportPanel'
+import { FeedbackLogProvider, useFeedbackLog } from './features/feedback/FeedbackLogContext'
+import { FeedbackLogPanel } from './features/feedback/FeedbackLogPanel'
 import { HistoryToolbar } from './features/history/HistoryToolbar'
+import { LoggingStatusIndicator } from './features/settings/LoggingStatusIndicator'
 import { SettingsTab, useSettings } from './features/settings/SettingsTab'
 import { TitleBar } from './features/titlebar/TitleBar'
 import appIconUrl from './assets/app-icon.png'
@@ -15,14 +19,15 @@ const EMPTY_HISTORY_STATUS: HistoryStatus = {
   redoLabel: null
 }
 
-type ActiveTab = 'domains' | 'settings'
+type ActiveTab = 'domains' | 'settings' | 'docs'
 
-function App(): JSX.Element {
+function AppContent(): JSX.Element {
   const [activeTab, setActiveTab] = useState<ActiveTab>('domains')
   const [refreshSignal, setRefreshSignal] = useState(0)
   const [historyStatus, setHistoryStatus] = useState<HistoryStatus>(EMPTY_HISTORY_STATUS)
   const [historyError, setHistoryError] = useState<string | null>(null)
   const { settings, updateSettings } = useSettings()
+  const feedback = useFeedbackLog()
 
   useEffect(() => {
     window.api.history.status().then((result) => {
@@ -53,10 +58,12 @@ function App(): JSX.Element {
       setHistoryStatus(result.data.history)
       setHistoryError(null)
       setRefreshSignal((n) => n + 1)
+      feedback.push('success', `Undid: ${result.data.label}`)
     } else {
       setHistoryError(result.error.message)
+      feedback.push('error', result.error.message)
     }
-  }, [])
+  }, [feedback])
 
   const handleRedo = useCallback(async () => {
     const result = await window.api.history.redo()
@@ -64,10 +71,12 @@ function App(): JSX.Element {
       setHistoryStatus(result.data.history)
       setHistoryError(null)
       setRefreshSignal((n) => n + 1)
+      feedback.push('success', `Redid: ${result.data.label}`)
     } else {
       setHistoryError(result.error.message)
+      feedback.push('error', result.error.message)
     }
-  }, [])
+  }, [feedback])
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent): void => {
@@ -101,7 +110,15 @@ function App(): JSX.Element {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <TitleBar title="Brave Domain Manager" appIcon={appIconUrl} />
       <HistoryToolbar status={historyStatus} onUndo={handleUndo} onRedo={handleRedo} error={historyError} />
-      <div style={{ display: 'flex', gap: 'var(--spacing-2)', padding: '0 var(--spacing-4)', borderBottom: '1px solid var(--color-border)' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--spacing-2)',
+          padding: '0 var(--spacing-4)',
+          borderBottom: '1px solid var(--color-border)'
+        }}
+      >
         <button
           type="button"
           onClick={() => setActiveTab('domains')}
@@ -116,8 +133,16 @@ function App(): JSX.Element {
         >
           Settings
         </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('docs')}
+          style={{ fontWeight: activeTab === 'docs' ? 'bold' : 'normal' }}
+        >
+          Documentation
+        </button>
+        <LoggingStatusIndicator enabled={settings?.logging.enabled ?? false} />
       </div>
-      <div style={{ flex: 1, overflow: 'auto', padding: 'var(--spacing-4)' }}>
+      <div style={{ flex: 1, overflow: 'auto', padding: activeTab === 'docs' ? 0 : 'var(--spacing-4)' }}>
         {activeTab === 'domains' ? (
           <>
             <h1>Blocked Domains</h1>
@@ -131,13 +156,26 @@ function App(): JSX.Element {
             />
             <BackupPanel onRestored={handleMutated} />
           </>
-        ) : settings ? (
-          <SettingsTab settings={settings} onChange={updateSettings} />
+        ) : activeTab === 'settings' ? (
+          settings ? (
+            <SettingsTab settings={settings} onChange={updateSettings} />
+          ) : (
+            <p>Loading settings…</p>
+          )
         ) : (
-          <p>Loading settings…</p>
+          <DocsTab />
         )}
       </div>
+      <FeedbackLogPanel />
     </div>
+  )
+}
+
+function App(): JSX.Element {
+  return (
+    <FeedbackLogProvider>
+      <AppContent />
+    </FeedbackLogProvider>
   )
 }
 
