@@ -7,7 +7,10 @@
   "author": "cbgithub7",
   "license": "MIT",
   "scripts": {
+    "helper:prepare": "node scripts/prepare-registry-helper.mjs",
+    "predev": "npm run helper:prepare",
     "dev": "electron-vite dev",
+    "prebuild": "npm run helper:prepare",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
@@ -32,6 +35,7 @@
     "@typescript-eslint/eslint-plugin": "^8.15.0",
     "@typescript-eslint/parser": "^8.15.0",
     "@vitejs/plugin-react": "^4.3.3",
+    "app-builder-bin": "^5.0.0-alpha.10",
     "electron": "^33.2.0",
     "electron-builder": "^25.1.8",
     "electron-vite": "^2.3.0",

@@ -17,7 +17,10 @@ const api = {
     }
   },
   domains: {
-    list: (): Promise<IpcResult<DomainEntry[]>> => ipcRenderer.invoke(IPC.domains.list)
+    list: (): Promise<IpcResult<DomainEntry[]>> => ipcRenderer.invoke(IPC.domains.list),
+    add: (domain: string): Promise<IpcResult<DomainEntry>> =>
+      ipcRenderer.invoke(IPC.domains.add, domain),
+    remove: (name: string): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC.domains.remove, name)
   }
 }
 

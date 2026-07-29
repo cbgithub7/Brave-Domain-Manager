@@ -11,7 +11,9 @@ export const IPC = {
     maximizeChanged: 'window:maximizeChanged'
   },
   domains: {
-    list: 'domains:list'
+    list: 'domains:list',
+    add: 'domains:add',
+    remove: 'domains:remove'
   }
 } as const
 

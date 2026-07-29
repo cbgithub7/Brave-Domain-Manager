@@ -8,4 +8,14 @@ export function registerDomainsHandlers(domainService: DomainService): void {
     IPC.domains.list,
     wrapHandler(() => domainService.listBlockedDomains())
   )
+
+  ipcMain.handle(
+    IPC.domains.add,
+    wrapHandler((_event: Electron.IpcMainInvokeEvent, domain: string) => domainService.addDomain(domain))
+  )
+
+  ipcMain.handle(
+    IPC.domains.remove,
+    wrapHandler((_event: Electron.IpcMainInvokeEvent, name: string) => domainService.removeDomain(name))
+  )
 }
