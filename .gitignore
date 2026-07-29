@@ -399,19 +399,11 @@ FodyWeavers.xsd
 
 #My Ideas
 New_features.txt
-prototype_code/
 known_bugs.txt
 venv_install_steps.txt
-config.ini
 notes/
 
-# Python virtual environment (legacy app)
-venv/
-legacy/__pycache__/
-legacy/**/__pycache__/
-*.pyc
-
-# Node / Electron (rewrite)
+# Node / Electron
 node_modules/
 dist/
 dist-electron/

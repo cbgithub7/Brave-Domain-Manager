@@ -4,8 +4,9 @@ A Windows desktop app for managing Brave browser's domain blocklist policy in th
 Windows registry — add, remove, search, undo/redo, and back up/restore blocked
 domains without hand-editing `regedit`.
 
-Built with Electron, React, and TypeScript. (The original PyQt5/PowerShell version
-has been archived to [`legacy/`](legacy/) and is no longer maintained.)
+Built with Electron, React, and TypeScript. (An earlier PyQt5/PowerShell version
+existed prior to this rewrite; it's no longer part of this repo, but still
+available in the git history if needed.)
 
 Documentation site: https://cbgithub7.github.io/Brave-Domain-Manager/
 
