@@ -13,7 +13,9 @@ export const IPC = {
   domains: {
     list: 'domains:list',
     add: 'domains:add',
-    remove: 'domains:remove'
+    remove: 'domains:remove',
+    pickFile: 'domains:pickFile',
+    loadFileStaged: 'domains:loadFileStaged'
   }
 } as const
 

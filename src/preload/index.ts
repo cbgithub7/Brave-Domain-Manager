@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import type { DomainEntry } from '@shared/domain-types'
+import type { AddDomainsResult, DomainEntry, RemoveDomainsResult, StagedDomain } from '@shared/domain-types'
 import { IPC, type IpcResult } from '@shared/ipc-contract'
 
 const api = {
@@ -18,9 +18,13 @@ const api = {
   },
   domains: {
     list: (): Promise<IpcResult<DomainEntry[]>> => ipcRenderer.invoke(IPC.domains.list),
-    add: (domain: string): Promise<IpcResult<DomainEntry>> =>
-      ipcRenderer.invoke(IPC.domains.add, domain),
-    remove: (name: string): Promise<IpcResult<void>> => ipcRenderer.invoke(IPC.domains.remove, name)
+    add: (domains: string[]): Promise<IpcResult<AddDomainsResult>> =>
+      ipcRenderer.invoke(IPC.domains.add, domains),
+    remove: (names: string[]): Promise<IpcResult<RemoveDomainsResult>> =>
+      ipcRenderer.invoke(IPC.domains.remove, names),
+    pickFile: (): Promise<IpcResult<string | null>> => ipcRenderer.invoke(IPC.domains.pickFile),
+    loadFileStaged: (filePath: string): Promise<IpcResult<StagedDomain[]>> =>
+      ipcRenderer.invoke(IPC.domains.loadFileStaged, filePath)
   }
 }
 
