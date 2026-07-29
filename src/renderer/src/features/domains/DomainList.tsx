@@ -92,10 +92,13 @@ export function DomainList({ refreshSignal, onMutated, onCountChange }: DomainLi
         feedback.push('error', message)
       }
       if (result.data.removed.length > 0) {
-        feedback.push(
-          'success',
-          result.data.removed.length === 1 ? 'Removed 1 domain.' : `Removed ${result.data.removed.length} domains.`
-        )
+        if (result.data.removed.length === 1) {
+          const removedName = result.data.removed[0]
+          const removedDomain = domains?.find((d) => d.name === removedName)?.domain ?? removedName
+          feedback.push('success', `Removed ${removedDomain}.`)
+        } else {
+          feedback.push('success', `Removed ${result.data.removed.length} domains.`)
+        }
       }
       setSelected(new Set())
       onMutated?.(result.data.history)

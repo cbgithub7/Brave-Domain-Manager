@@ -74,6 +74,19 @@ describe('DomainService.removeDomains', () => {
     expect(result.removed).toEqual([list[0].name])
     expect(await ctx.service.listBlockedDomains()).toEqual([])
   })
+
+  it('names the domain in the undo label for a single removal', async () => {
+    const list = await ctx.service.listBlockedDomains()
+    const result = await ctx.service.removeDomains([list[0].name])
+    expect(result.history.undoLabel).toBe('Remove example.com')
+  })
+
+  it('uses a count in the undo label for a bulk removal', async () => {
+    await ctx.service.addDomains(['b.com'])
+    const list = await ctx.service.listBlockedDomains()
+    const result = await ctx.service.removeDomains(list.map((entry) => entry.name))
+    expect(result.history.undoLabel).toBe('Remove 2 domains')
+  })
 })
 
 describe('DomainService undo/redo', () => {

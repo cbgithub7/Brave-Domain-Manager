@@ -9,7 +9,6 @@
 // failed, since undo/redo correctness depends on knowing exactly which
 // entries actually applied.
 const fs = require('fs')
-const regedit = require('regedit-rs')
 
 async function main() {
   const [payloadPath, resultPath] = process.argv.slice(2)
@@ -17,6 +16,12 @@ async function main() {
     console.error('usage: registryWriteHelper.js <payloadPath> <resultPath>')
     process.exit(1)
   }
+
+  // Deferred past the usage check, and wrapped by the same outer .catch()
+  // as everything else below - a failure to even load the native binding
+  // (e.g. missing prebuilt for this Node ABI) must still produce a
+  // fatalError in resultPath, not an uncaught crash the caller can't see.
+  const regedit = require('regedit-rs')
 
   const payload = JSON.parse(fs.readFileSync(payloadPath, 'utf-8'))
   const { path: regPath, entries } = payload

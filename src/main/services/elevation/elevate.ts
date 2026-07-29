@@ -72,34 +72,56 @@ export async function runElevatedRegistryBatch(
       `-ArgumentList @(${argumentList}) -Verb RunAs -Wait -PassThru -WindowStyle Hidden; ` +
       `exit $p.ExitCode`
 
+    let exitCode = 0
+    let stderr = ''
     await new Promise<void>((resolve, reject) => {
       const child = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', psScript], {
         windowsHide: true
       })
 
-      let stderr = ''
       child.stderr?.on('data', (chunk: Buffer) => {
         stderr += chunk.toString()
       })
 
       child.on('error', reject)
       child.on('exit', (code) => {
-        if (code === 0) resolve()
-        else reject(new Error(stderr.trim() || `Elevated helper exited with code ${code}`))
+        exitCode = code ?? 1
+        resolve()
       })
     })
 
-    const raw = await readFile(resultPath, 'utf-8')
-    const parsed = JSON.parse(raw) as HelperResultFile
-    if (parsed.fatalError) {
-      throw new AppErrorException('ELEVATION_FAILED', parsed.fatalError)
+    // The helper (running elevated, via ShellExecute) can't have its stdio
+    // redirected back to us - Start-Process rejects -Verb RunAs combined with
+    // -RedirectStandard* outright, since ShellExecute doesn't inherit handles
+    // across the elevation boundary. So even when the launcher script itself
+    // exited non-zero, the helper may still have gotten far enough to write a
+    // real fatalError to resultPath before dying - always prefer that over
+    // the launcher's own generic exit code.
+    const resultFile = await readFile(resultPath, 'utf-8').catch(() => null)
+    if (resultFile) {
+      const parsed = JSON.parse(resultFile) as HelperResultFile
+      if (parsed.fatalError) {
+        throw new AppErrorException('ELEVATION_FAILED', parsed.fatalError)
+      }
+      if (exitCode === 0) {
+        return parsed.results ?? []
+      }
     }
-    return parsed.results ?? []
+
+    if (exitCode !== 0) {
+      const message = stderr.trim() || `Elevated helper exited with code ${exitCode}`
+      // Windows error 1223 ("The operation was canceled by the user") is what
+      // CreateProcess reports when the user dismisses the UAC prompt.
+      if (/cancel/i.test(message) || message.includes('1223')) {
+        throw new AppErrorException('ELEVATION_CANCELLED', 'The elevation request was cancelled.')
+      }
+      throw new AppErrorException('ELEVATION_FAILED', message)
+    }
+
+    throw new AppErrorException('ELEVATION_FAILED', 'The registry helper did not produce a result.')
   } catch (error) {
     if (error instanceof AppErrorException) throw error
     const message = error instanceof Error ? error.message : String(error)
-    // Windows error 1223 ("The operation was canceled by the user") is what
-    // CreateProcess reports when the user dismisses the UAC prompt.
     if (/cancel/i.test(message) || message.includes('1223')) {
       throw new AppErrorException('ELEVATION_CANCELLED', 'The elevation request was cancelled.')
     }

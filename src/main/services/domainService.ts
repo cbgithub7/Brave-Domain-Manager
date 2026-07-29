@@ -137,6 +137,7 @@ export class DomainService {
     )
 
     const removed: string[] = []
+    const removedDomains: string[] = []
     const failed: RemoveDomainsResult['failed'] = []
     const apply: DomainMutation[] = []
     const invert: DomainMutation[] = []
@@ -145,6 +146,7 @@ export class DomainService {
       const result = results.find((r) => r.name === name)
       if (result?.ok) {
         removed.push(name)
+        removedDomains.push(existingByName.get(name) ?? name)
         apply.push({ op: 'delete', name })
         const originalValue = existingByName.get(name)
         if (originalValue !== undefined) {
@@ -159,7 +161,8 @@ export class DomainService {
       this.history.push({
         id: randomUUID(),
         timestamp: Date.now(),
-        label: removed.length === 1 ? 'Remove domain' : `Remove ${removed.length} domains`,
+        label:
+          removedDomains.length === 1 ? `Remove ${removedDomains[0]}` : `Remove ${removed.length} domains`,
         apply,
         invert
       })
