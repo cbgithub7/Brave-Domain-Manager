@@ -1,0 +1,102 @@
+.titlebar {
+  display: flex;
+  align-items: center;
+  height: var(--titlebar-height);
+  background: var(--titlebar-bg);
+  color: var(--titlebar-fg);
+  -webkit-app-region: drag;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.iconTitle {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: var(--spacing-2);
+  padding-left: var(--spacing-2);
+}
+
+.appIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.buttons {
+  display: flex;
+  height: 100%;
+  -webkit-app-region: no-drag;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 100ms ease-in-out;
+}
+
+.button:hover {
+  background: var(--titlebar-hover);
+}
+
+.button:active {
+  background: var(--titlebar-active);
+}
+
+.closeButton:hover {
+  background: var(--titlebar-close-hover);
+  color: #ffffff;
+}
+
+.closeButton:active {
+  background: var(--titlebar-close-active);
+  color: #ffffff;
+}
+
+.icon {
+  width: 14px;
+  height: 14px;
+  background-color: currentColor;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+}
+
+.iconMinimize {
+  mask-image: url('/icons/dash-lg.svg');
+  -webkit-mask-image: url('/icons/dash-lg.svg');
+}
+
+.iconMaximize {
+  mask-image: url('/icons/fullscreen.svg');
+  -webkit-mask-image: url('/icons/fullscreen.svg');
+}
+
+.iconRestore {
+  mask-image: url('/icons/fullscreen-exit.svg');
+  -webkit-mask-image: url('/icons/fullscreen-exit.svg');
+}
+
+.iconClose {
+  mask-image: url('/icons/x-lg.svg');
+  -webkit-mask-image: url('/icons/x-lg.svg');
+}

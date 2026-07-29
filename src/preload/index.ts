@@ -6,22 +6,19 @@ const api = {
   window: {
     minimize: (): void => ipcRenderer.send(IPC.window.minimize),
     maximizeToggle: (): void => ipcRenderer.send(IPC.window.maximizeToggle),
-    close: (): void => ipcRenderer.send(IPC.window.close)
+    close: (): void => ipcRenderer.send(IPC.window.close),
+    isMaximized: (): Promise<boolean> => ipcRenderer.invoke(IPC.window.isMaximized),
+    onMaximizeChanged: (callback: (isMaximized: boolean) => void): (() => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, isMaximized: boolean): void =>
+        callback(isMaximized)
+      ipcRenderer.on(IPC.window.maximizeChanged, listener)
+      return () => ipcRenderer.removeListener(IPC.window.maximizeChanged, listener)
+    }
   }
 }
 
 export type Api = typeof api
 
-if (process.contextIsolated) {
-  try {
-    contextBridge.exposeInMainWorld('electron', electronAPI)
-    contextBridge.exposeInMainWorld('api', api)
-  } catch (error) {
-    console.error(error)
-  }
-} else {
-  // @ts-expect-error (define in dts, only hit when contextIsolation is disabled)
-  window.electron = electronAPI
-  // @ts-expect-error (define in dts, only hit when contextIsolation is disabled)
-  window.api = api
-}
+// contextIsolation is always on (see mainWindow.ts) — no fallback branch needed.
+contextBridge.exposeInMainWorld('electron', electronAPI)
+contextBridge.exposeInMainWorld('api', api)

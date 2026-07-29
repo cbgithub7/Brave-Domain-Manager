@@ -1,6 +1,7 @@
 import { join } from 'path'
 import { BrowserWindow, shell } from 'electron'
 import { is } from '@electron-toolkit/utils'
+import { registerWindowStateEvents } from '../ipc/registerIpcHandlers'
 
 export function createMainWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
@@ -11,6 +12,7 @@ export function createMainWindow(): BrowserWindow {
     show: false,
     frame: false,
     autoHideMenuBar: true,
+    icon: join(__dirname, '../../resources/icon.ico'),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: true,
@@ -18,6 +20,8 @@ export function createMainWindow(): BrowserWindow {
       nodeIntegration: false
     }
   })
+
+  registerWindowStateEvents(mainWindow)
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()

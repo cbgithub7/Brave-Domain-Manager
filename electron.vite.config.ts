@@ -12,7 +12,16 @@ export default defineConfig({
     }
   },
   preload: {
-    plugins: [externalizeDepsPlugin()],
+    // No externalizeDepsPlugin here: webPreferences.sandbox is true, and a
+    // sandboxed preload's require() only resolves Node built-ins, not
+    // arbitrary node_modules packages. Everything the preload needs
+    // (@electron-toolkit/preload, @shared/ipc-contract) must be bundled in;
+    // only 'electron' itself stays external (it's a virtual/native module).
+    build: {
+      rollupOptions: {
+        external: ['electron']
+      }
+    },
     resolve: {
       alias: {
         '@shared': resolve('src/shared')
