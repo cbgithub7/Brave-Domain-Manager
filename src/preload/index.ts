@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import type { BackupExportResult, BackupImportResult, RestoreMode } from '@shared/backup-types'
 import type { AddDomainsResult, DomainEntry, RemoveDomainsResult, StagedDomain } from '@shared/domain-types'
 import type { HistoryStatus, UndoRedoResult } from '@shared/history-types'
 import { IPC, type IpcResult } from '@shared/ipc-contract'
@@ -31,6 +32,14 @@ const api = {
     status: (): Promise<IpcResult<HistoryStatus>> => ipcRenderer.invoke(IPC.history.status),
     undo: (): Promise<IpcResult<UndoRedoResult>> => ipcRenderer.invoke(IPC.history.undo),
     redo: (): Promise<IpcResult<UndoRedoResult>> => ipcRenderer.invoke(IPC.history.redo)
+  },
+  backup: {
+    pickSaveFile: (): Promise<IpcResult<string | null>> => ipcRenderer.invoke(IPC.backup.pickSaveFile),
+    pickOpenFile: (): Promise<IpcResult<string | null>> => ipcRenderer.invoke(IPC.backup.pickOpenFile),
+    export: (filePath: string): Promise<IpcResult<BackupExportResult>> =>
+      ipcRenderer.invoke(IPC.backup.export, filePath),
+    import: (filePath: string, mode: RestoreMode): Promise<IpcResult<BackupImportResult>> =>
+      ipcRenderer.invoke(IPC.backup.import, filePath, mode)
   }
 }
 

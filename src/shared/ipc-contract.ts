@@ -21,6 +21,12 @@ export const IPC = {
     status: 'history:status',
     undo: 'history:undo',
     redo: 'history:redo'
+  },
+  backup: {
+    pickSaveFile: 'backup:pickSaveFile',
+    pickOpenFile: 'backup:pickOpenFile',
+    export: 'backup:export',
+    import: 'backup:import'
   }
 } as const
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { HistoryStatus } from '@shared/history-types'
+import { BackupPanel } from './features/backup/BackupPanel'
 import { DomainList } from './features/domains/DomainList'
 import { FileImportPanel } from './features/domains/FileImportPanel'
 import { HistoryToolbar } from './features/history/HistoryToolbar'
@@ -91,6 +92,10 @@ function App(): JSX.Element {
           style={{ margin: 'var(--spacing-4) 0', border: 'none', borderTop: '1px solid var(--color-border)' }}
         />
         <FileImportPanel onCommitted={handleMutated} />
+        <hr
+          style={{ margin: 'var(--spacing-4) 0', border: 'none', borderTop: '1px solid var(--color-border)' }}
+        />
+        <BackupPanel onRestored={handleMutated} />
       </div>
     </div>
   )
