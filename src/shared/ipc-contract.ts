@@ -9,6 +9,9 @@ export const IPC = {
     close: 'window:close',
     isMaximized: 'window:isMaximized',
     maximizeChanged: 'window:maximizeChanged'
+  },
+  domains: {
+    list: 'domains:list'
   }
 } as const
 

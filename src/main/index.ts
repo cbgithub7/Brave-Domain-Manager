@@ -1,6 +1,9 @@
 import { app, BrowserWindow } from 'electron'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
+import { registerDomainsHandlers } from './ipc/handlers/domains'
 import { registerIpcHandlers } from './ipc/registerIpcHandlers'
+import { RegeditRsRegistryClient } from './services/regeditRsRegistryClient'
+import { DomainService } from './services/domainService'
 import { createMainWindow } from './windows/mainWindow'
 
 app.whenReady().then(() => {
@@ -10,7 +13,10 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
+  const domainService = new DomainService(new RegeditRsRegistryClient())
+
   registerIpcHandlers()
+  registerDomainsHandlers(domainService)
   createMainWindow()
 
   app.on('activate', () => {

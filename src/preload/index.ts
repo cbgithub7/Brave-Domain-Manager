@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import { IPC } from '@shared/ipc-contract'
+import type { DomainEntry } from '@shared/domain-types'
+import { IPC, type IpcResult } from '@shared/ipc-contract'
 
 const api = {
   window: {
@@ -14,6 +15,9 @@ const api = {
       ipcRenderer.on(IPC.window.maximizeChanged, listener)
       return () => ipcRenderer.removeListener(IPC.window.maximizeChanged, listener)
     }
+  },
+  domains: {
+    list: (): Promise<IpcResult<DomainEntry[]>> => ipcRenderer.invoke(IPC.domains.list)
   }
 }
 
