@@ -2,6 +2,7 @@ import { join } from 'path'
 import { BrowserWindow, shell } from 'electron'
 import { is } from '@electron-toolkit/utils'
 import { registerWindowStateEvents } from '../ipc/registerIpcHandlers'
+import { getResourcesDir } from '../resourcePaths'
 
 export function createMainWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
@@ -12,7 +13,7 @@ export function createMainWindow(): BrowserWindow {
     show: false,
     frame: false,
     autoHideMenuBar: true,
-    icon: join(__dirname, '../../resources/icon.ico'),
+    icon: join(getResourcesDir(), 'icon.ico'),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: true,

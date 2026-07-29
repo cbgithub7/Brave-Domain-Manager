@@ -3,7 +3,7 @@ import type { AddDomainsResult, DomainEntry, RemoveDomainsResult } from '@shared
 import { validateDomain } from '@shared/domainValidation'
 import type { UndoRedoResult } from '@shared/history-types'
 import { AppErrorException } from '../ipc/wrapHandler'
-import { runElevatedRegistryBatch } from './elevation/elevate'
+import { runElevatedRegistryBatch, type ElevationRunner } from './elevation/elevate'
 import type { DomainMutation } from './historyService'
 import type { HistoryService } from './historyService'
 import type { AppLogger } from './logger/logger'
@@ -26,7 +26,8 @@ export class DomainService {
   constructor(
     private readonly registry: RegistryClient,
     private readonly history: HistoryService,
-    private readonly logger: AppLogger
+    private readonly logger: AppLogger,
+    private readonly runElevated: ElevationRunner = runElevatedRegistryBatch
   ) {}
 
   async listBlockedDomains(): Promise<DomainEntry[]> {
@@ -71,7 +72,7 @@ export class DomainService {
       return { added: [], skipped, history: this.history.status() }
     }
 
-    const results = await runElevatedRegistryBatch(
+    const results = await this.runElevated(
       BRAVE_URL_BLOCKLIST_PATH,
       toWrite.map((entry) => ({ op: 'set', name: entry.name, value: entry.domain }))
     )
@@ -130,7 +131,7 @@ export class DomainService {
     const existing = await this.registry.listStringValues(BRAVE_URL_BLOCKLIST_PATH)
     const existingByName = new Map(existing.map((entry) => [entry.name, entry.value]))
 
-    const results = await runElevatedRegistryBatch(
+    const results = await this.runElevated(
       BRAVE_URL_BLOCKLIST_PATH,
       names.map((name) => ({ op: 'delete', name }))
     )
@@ -190,7 +191,7 @@ export class DomainService {
 
     await this.assertNoExternalConflict(action.invert, `undo "${action.label}"`)
 
-    const results = await runElevatedRegistryBatch(BRAVE_URL_BLOCKLIST_PATH, action.invert)
+    const results = await this.runElevated(BRAVE_URL_BLOCKLIST_PATH, action.invert)
     const failure = results.find((r) => !r.ok)
     if (failure) {
       throw new AppErrorException('REGISTRY_WRITE_ERROR', `Failed to undo "${action.label}": ${failure.error}`)
@@ -209,7 +210,7 @@ export class DomainService {
 
     await this.assertNoExternalConflict(action.apply, `redo "${action.label}"`)
 
-    const results = await runElevatedRegistryBatch(BRAVE_URL_BLOCKLIST_PATH, action.apply)
+    const results = await this.runElevated(BRAVE_URL_BLOCKLIST_PATH, action.apply)
     const failure = results.find((r) => !r.ok)
     if (failure) {
       throw new AppErrorException('REGISTRY_WRITE_ERROR', `Failed to redo "${action.label}": ${failure.error}`)

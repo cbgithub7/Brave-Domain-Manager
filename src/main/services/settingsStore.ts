@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
-import { dirname, join } from 'node:path'
-import { app } from 'electron'
+import { dirname } from 'node:path'
 import { DEFAULT_SETTINGS, type AppSettings } from '@shared/settings-types'
 
 /**
@@ -11,10 +10,15 @@ import { DEFAULT_SETTINGS, type AppSettings } from '@shared/settings-types'
  * temp-file-then-rename so a crash or power loss mid-write can't corrupt the
  * settings file. Skips electron-store: its current major is ESM-only, which
  * fights electron-vite's default CJS main build for no real benefit here.
+ *
+ * Takes filePath rather than computing it from app.getPath('userData')
+ * internally, so this class has no Electron dependency and can be unit
+ * tested against a plain temp directory.
  */
 export class SettingsStore {
   private settings: AppSettings = DEFAULT_SETTINGS
-  private readonly filePath = join(app.getPath('userData'), 'settings.json')
+
+  constructor(private readonly filePath: string) {}
 
   async load(): Promise<AppSettings> {
     try {

@@ -430,3 +430,9 @@ resources/helpers/registry-write-helper.exe
 # case-insensitively on Windows (core.ignorecase=true by default) and was
 # silently swallowing our own src/renderer/src/features/backup/ folder.
 !src/renderer/src/features/backup/
+
+# Playwright E2E test artifacts
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/

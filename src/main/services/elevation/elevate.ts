@@ -3,8 +3,8 @@ import { spawn } from 'node:child_process'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { app } from 'electron'
 import { AppErrorException } from '../../ipc/wrapHandler'
+import { getResourcesDir } from '../../resourcePaths'
 
 export interface RegistryWriteEntry {
   op: 'set' | 'delete'
@@ -23,12 +23,12 @@ interface HelperResultFile {
   fatalError?: string
 }
 
-function getResourcesDir(): string {
-  // Dev: project root (app.getAppPath() resolves to the folder containing
-  // package.json). Packaged builds need this pointed at process.resourcesPath
-  // once Phase 8 wires electron-builder's extraResources for this folder.
-  return join(app.getAppPath(), 'resources')
-}
+/** Injectable seam for domainService - production wiring defaults to runElevatedRegistryBatch;
+ *  tests inject a fake that applies straight to a FakeRegistryClient, no UAC/native binding involved. */
+export type ElevationRunner = (
+  registryPath: string,
+  entries: RegistryWriteEntry[]
+) => Promise<RegistryWriteEntryResult[]>
 
 function getHelperExePath(): string {
   return join(getResourcesDir(), 'helpers', 'registry-write-helper.exe')

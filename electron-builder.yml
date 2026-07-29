@@ -8,10 +8,22 @@ files:
   - '!**/.vscode/*'
   - '!src/**'
   - '!electron.vite.config.{js,ts,mjs,cjs}'
-asarUnpack:
-  - resources/**
+extraResources:
+  # Copied to process.resourcesPath (outside app.asar) - the elevated helper
+  # exe can't execute from inside an asar archive, and the icon needs a
+  # plain filesystem path too. See src/main/resourcePaths.ts.
+  - from: resources
+    to: .
+  # registryWriteHelper.js runs as its own standalone node.exe process (not
+  # Electron's Node), with no relationship to app.asar's node_modules - its
+  # require('regedit-rs') only resolves if regedit-rs (and its hoisted
+  # platform-specific native package) ship alongside it directly.
+  - from: node_modules/regedit-rs
+    to: helpers/node_modules/regedit-rs
+  - from: node_modules/regedit-rs-win32-x64-msvc
+    to: helpers/node_modules/regedit-rs-win32-x64-msvc
 win:
-  executionLevel: asInvoker
+  requestedExecutionLevel: asInvoker
   target:
     - target: nsis
       arch:

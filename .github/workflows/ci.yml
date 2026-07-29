@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    # Registry writes need elevation, but nothing here should ever trigger
+    # one: unit tests use FakeRegistryClient, and E2E runs with NODE_ENV=test
+    # (see src/main/index.ts), which swaps in the same fake + a no-op
+    # elevation runner. This job runs as a normal non-admin user throughout,
+    # matching how the packaged app itself runs by default.
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+      - name: E2E tests (fake registry, no UAC)
+        run: npx playwright test
+        env:
+          NODE_ENV: test
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Package (unsigned)
+        run: npm run build:win
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: release/*.exe
+          retention-days: 14
