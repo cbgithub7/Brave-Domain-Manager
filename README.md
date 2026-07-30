@@ -17,8 +17,9 @@ Grab the latest installer from the
 
 - **`brave-domain-manager-<version>-setup.exe`** — Windows installer (64-bit)
 
-No release published yet, or want the latest unreleased changes? See
-[Building from source](#building-from-source) below.
+Already installed? The app checks for a new version on launch and updates
+itself in place — see [Updates](#updates) below. Want the latest unreleased
+changes instead? See [Building from source](#building-from-source).
 
 ## Install
 
@@ -86,8 +87,17 @@ Under "Backup & restore":
 - **Font scale** — 70%–140%, applied live.
 - **Logging** — disabled by default. Turn it on and pick which categories to
   record (registry access, user activity, audit, security, etc.). Logs are
-  written to your user data folder and rotate daily. A small indicator next to
-  the tabs always shows whether logging is currently on.
+  written to your user data folder and rotate daily. Current status is always
+  visible in the Domains view's inspector panel on the right.
+- **About** — shows the installed version number.
+
+### Updates
+
+The app checks for a new version once, on launch, and downloads it in the
+background if one's found. A quiet "Update available" indicator appears at
+the bottom of the sidebar; once the download finishes it becomes "Update
+ready" — clicking it shows what changed before you choose to install (which
+restarts the app).
 
 ### Documentation tab
 

@@ -143,8 +143,9 @@ long-term snapshot mechanism, independent of Undo/Redo:
 - **Logging** — disabled by default. When enabled, you choose which
   categories to record (registry access, user activity, configuration
   changes, audit, security, performance, startup/shutdown, success/error).
-  Logs are written to your user data folder and rotate daily. A small
-  indicator next to the tabs always shows whether logging is currently on.
+  Logs are written to your user data folder and rotate daily. Current status
+  is always visible in the Domains view's inspector panel on the right.
+- **About** — shows the installed version number.
 - **Updates** — checked once on launch; a new version downloads in the
   background and shows as a quiet indicator at the bottom of the sidebar.
   Once ready, clicking it shows what changed before you choose to install
